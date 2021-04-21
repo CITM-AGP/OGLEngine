@@ -324,7 +324,7 @@ void Init(App* app)
     app->model = LoadModel(app, "Patrick/Patrick.obj");
 
     // --- Create entities ---
-    Entity ent = Entity(glm::mat4(1.0),app->model, 0, 0);
+    Entity ent = Entity(glm::mat4(1.0), app->model, 0, 0);
     ent.worldMatrix = glm::translate(ent.worldMatrix, vec3(1.0, 1.0, 5.0));
     app->entities.push_back(ent);
 

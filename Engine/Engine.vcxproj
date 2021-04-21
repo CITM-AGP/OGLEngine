@@ -151,12 +151,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glfw\include;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glad\include;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glm\include;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\imgui-docking;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\stb;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)ThirdParty\glfw\include;$(ProjectDir)ThirdParty\glad\include;$(ProjectDir)ThirdParty\glm\include;$(ProjectDir)ThirdParty\imgui-docking;$(ProjectDir)ThirdParty\stb;$(ProjectDir)ThirdParty\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glfw\lib-vc2019;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\Assimp\lib\windows;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)ThirdParty\glfw\lib-vc2019;$(ProjectDir)ThirdParty\Assimp\lib\windows;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -168,14 +168,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glfw\include;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glad\include;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glm\include;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\imgui-docking;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\stb;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)ThirdParty\glfw\include;$(ProjectDir)ThirdParty\glad\include;$(ProjectDir)ThirdParty\glm\include;$(ProjectDir)ThirdParty\imgui-docking;$(ProjectDir)ThirdParty\stb;$(ProjectDir)ThirdParty\Assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\glfw\lib-vc2019;C:\Users\simon\Documents\GitHub\UniversityExercises\AdvancedGraphicsProgramming\EngineTemplate\Engine\ThirdParty\Assimp\lib\windows;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)ThirdParty\glfw\lib-vc2019;$(ProjectDir)ThirdParty\Assimp\lib\windows;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
