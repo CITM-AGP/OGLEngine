@@ -19,6 +19,20 @@ typedef glm::ivec2 ivec2;
 typedef glm::ivec3 ivec3;
 typedef glm::ivec4 ivec4;
 
+enum LightType
+{
+    LightType_Directional,
+    LightType_Point
+};
+
+struct Light
+{
+    LightType type;
+    vec3 color;
+    vec3 direction;
+    vec3 position;
+};
+
 struct Image
 {
     void* pixels;
