@@ -7,8 +7,9 @@
 #include "platform.h"
 #include "Geometry.h"
 #include "Mesh.h"
-#include "assimp_model_loading.h"
 #include <glad/glad.h>
+#include "assimp_model_loading.h"
+#include "buffer_management.h"
 
 #define BINDING(b) b
 
@@ -27,6 +28,14 @@ enum LightType
 
 struct Light
 {
+    Light(LightType typ, vec3 col, vec3 dir, vec3 pos)
+    {
+        type = typ;
+        color = col;
+        direction = dir;
+        position = pos;
+    }
+
     LightType type;
     vec3 color;
     vec3 direction;
@@ -103,7 +112,8 @@ struct App
     char openGlVersion[64];
     GLint maxUniformBufferSize;
     GLint uniformBlockAlignment;
-    GLuint uniformbufferHandle;
+    //GLuint uniformbufferHandle;
+    //Buffer uniformbuffer;
     ivec2 displaySize;
 
     std::vector<Texture>  textures;
@@ -112,11 +122,16 @@ struct App
     std::vector<Model> models;
     std::vector<Material> materials;
     std::vector<Entity> entities;
-
+    std::vector<Light> lights;
 
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
+
+    // lights
+    u32 globalParamsOffset;
+    u32 globalParamsSize;
+    Buffer cbuffer;
 
     // texture indices
     u32 diceTexIdx;

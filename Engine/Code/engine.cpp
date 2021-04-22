@@ -9,7 +9,6 @@
 #include <imgui.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
-#include "buffer_management.h"
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName)
 {
@@ -264,10 +263,13 @@ void Init(App* app)
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
-    glGenBuffers(1, &app->uniformbufferHandle);
-    glBindBuffer(GL_UNIFORM_BUFFER, app->uniformbufferHandle);
-    glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    //glGenBuffers(1, &app->uniformbufferHandle);
+    //glBindBuffer(GL_UNIFORM_BUFFER, app->uniformbufferHandle);
+    //glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
+    //glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    //app->uniformbuffer = CreateConstantBuffer(app->maxUniformBufferSize);
+    app->cbuffer = CreateConstantBuffer(app->maxUniformBufferSize);
 
     GLint num_extensions;
     glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
@@ -331,6 +333,9 @@ void Init(App* app)
     Entity ent3 = Entity(glm::mat4(1.0), app->model, 0, 0);
     ent3.worldMatrix = glm::translate(ent3.worldMatrix, vec3(1.0, 1.0, -2.0));
     app->entities.push_back(ent3);
+
+    // --- Create lights
+    //Light light = Lig
 }
 
 void Gui(App* app)
@@ -381,8 +386,10 @@ void Update(App* app)
 
     ////glm::mat4 worldMatrix = glm::mat4(1.0);
 
+    vec3 cameraPosition = vec3(4.0f, 5.0f, 6.0f);
+
     glm::mat4 CameraMatrix = glm::lookAt(
-        vec3(4.0f, 5.0f, 6.0f), // the position of your camera, in world space
+        cameraPosition, // the position of your camera, in world space
         vec3(0.0f),   // where you want to look at, in world space
         glm::vec3(0,1,0)        // probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down, which can be great too
     );    
@@ -396,33 +403,59 @@ void Update(App* app)
     );
     
 
-    glBindBuffer(GL_UNIFORM_BUFFER, app->uniformbufferHandle);
-    u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
-    u32 bufferHead = 0;
+    //glBindBuffer(GL_UNIFORM_BUFFER, app->uniformbufferHandle);
+    //u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+    //u32 bufferHead = 0;
+
+    MapBuffer(app->cbuffer, GL_WRITE_ONLY);
 
     for (Entity& ent : app->entities)
     {
         glm::mat4 worldViewProjectionMatrix = projectionMatrix * CameraMatrix * ent.worldMatrix;
 
-        bufferHead = Align(bufferHead, app->uniformBlockAlignment);
+        //bufferHead = Align(bufferHead, app->uniformBlockAlignment);
+        AlignHead(app->cbuffer, app->uniformBlockAlignment);
+        ent.localParamsOffset = app->cbuffer.head;
 
-        ent.localParamsOffset = bufferHead;
+        PushMat4(app->cbuffer, ent.worldMatrix);
+        PushMat4(app->cbuffer, worldViewProjectionMatrix);
 
-        memcpy(bufferData + bufferHead, glm::value_ptr(ent.worldMatrix), sizeof(glm::mat4));
-        bufferHead += sizeof(glm::mat4);
+        //memcpy(bufferData + bufferHead, glm::value_ptr(ent.worldMatrix), sizeof(glm::mat4));
+        //bufferHead += sizeof(glm::mat4);
 
-        memcpy(bufferData + bufferHead, glm::value_ptr(worldViewProjectionMatrix), sizeof(glm::mat4));
-        bufferHead += sizeof(glm::mat4);
+        //memcpy(bufferData + bufferHead, glm::value_ptr(worldViewProjectionMatrix), sizeof(glm::mat4));
+        //bufferHead += sizeof(glm::mat4);
 
-        ent.localParamsSize = bufferHead - ent.localParamsOffset;
+        ent.localParamsSize = app->cbuffer.head - ent.localParamsOffset;
     }
 
-    //u32 blockOffset = 0;
-    //u32 blockSize = sizeof(glm::mat4) * 2;
-    //glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->uniformbufferHandle, blockOffset, blockSize);
+    //UnmapBuffer(app->cbuffer);
+    //glUnmapBuffer(GL_UNIFORM_BUFFER);
+    //glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glUnmapBuffer(GL_UNIFORM_BUFFER);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    // -- Global params ---
+
+    //MapBuffer(app->cbuffer, GL_WRITE_ONLY);
+
+    app->globalParamsOffset = app->cbuffer.head;
+
+    PushVec3(app->cbuffer, cameraPosition);
+    PushUInt(app->cbuffer, app->lights.size());
+
+    for (u32 i = 0; i < app->lights.size(); ++i)
+    {
+        AlignHead(app->cbuffer, sizeof(vec4));
+
+        Light& light = app->lights[i];
+        PushUInt(app->cbuffer, light.type);
+        PushVec3(app->cbuffer, light.color);
+        PushVec3(app->cbuffer, light.direction);
+        PushVec3(app->cbuffer, light.position);
+    }
+
+    app->globalParamsSize = app->cbuffer.head - app->globalParamsOffset;
+
+    UnmapBuffer(app->cbuffer); 
 }
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
@@ -537,7 +570,8 @@ void Render(App* app)
                 Model& model = app->models[ent.modelIndex];
                 Mesh& mesh = app->meshes[model.meshIdx];
 
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->uniformbufferHandle, ent.localParamsOffset, ent.localParamsSize);
+                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
 
                 for (u32 i = 0; i < mesh.submeshes.size(); ++i)
                 {
