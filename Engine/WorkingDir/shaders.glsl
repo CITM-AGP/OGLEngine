@@ -91,17 +91,66 @@ void main()
 
 // TODO: Write your fragment shader here
 
+struct Light
+{
+	unsigned int type;
+	vec3 color;
+	vec3 direction;
+	vec3 position;
+};
+
 in vec2 vTexCoord;
 in vec3 vPosition; // in worldspace
 in vec3 vNormal; // in worldspace
+in vec3 uViewDir; // in worldspace
 
 uniform sampler2D uTexture;
+
+layout(binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+	Light uLight[16];
+};
 
 layout(location = 0) out vec4 oColor;
 
 void main()
 {
-	oColor = texture(uTexture, vTexCoord);
+	// Mat parameters
+    vec3 specular = vec3(1.0); // color reflected by mat
+    float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
+	vec4 albedo = texture(uTexture, vTexCoord);
+
+	// Ambient
+    float ambientIntensity = 0.4;
+    vec3 ambientColor = albedo.xyz * ambientIntensity;
+
+    vec3 N = normalize(vNormal); // normal
+	vec3 V = normalize(-uViewDir.xyz); // direction from pixel to camera
+
+	vec3 diffuseColor;
+	vec3 specularColor;
+
+	for(int i = 0; i < uLightCount; ++i)
+	{
+	   vec3 L = normalize(uLight[i].direction - uViewDir.xyz); // Light direction 
+	   vec3 R = reflect(-L, N); // reflected vector
+
+	   // Diffuse
+	   float diffuseIntensity = max(0.0, dot(N, L));
+	   diffuseColor += albedo.xyz * uLight[i].color * diffuseIntensity;
+
+	   // Specular
+	   float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
+	   specularColor += specular*uLight[i].color * specularIntensity;
+	}
+
+	// Final color
+    //oColor = albedo;
+	//oColor = vec4(uLight[0].color, 1.0);
+
+	oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
 }
 
 #endif

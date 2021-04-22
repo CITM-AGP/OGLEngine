@@ -263,12 +263,6 @@ void Init(App* app)
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
-    //glGenBuffers(1, &app->uniformbufferHandle);
-    //glBindBuffer(GL_UNIFORM_BUFFER, app->uniformbufferHandle);
-    //glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
-    //glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    //app->uniformbuffer = CreateConstantBuffer(app->maxUniformBufferSize);
     app->cbuffer = CreateConstantBuffer(app->maxUniformBufferSize);
 
     GLint num_extensions;
@@ -335,7 +329,12 @@ void Init(App* app)
     app->entities.push_back(ent3);
 
     // --- Create lights
-    //Light light = Lig
+    Light light = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), vec3(-2.0, 1.0, 0.0));
+    app->lights.push_back(light);
+
+    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 1.0), vec3(-1.0, 0.0, 0.0), vec3(2.0, 1.0, 0.0));
+    app->lights.push_back(light2);
+
 }
 
 void Gui(App* app)
@@ -402,40 +401,9 @@ void Update(App* app)
         100.0f             // Far clipping plane. Keep as little as possible.
     );
     
-
-    //glBindBuffer(GL_UNIFORM_BUFFER, app->uniformbufferHandle);
-    //u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
-    //u32 bufferHead = 0;
-
-    MapBuffer(app->cbuffer, GL_WRITE_ONLY);
-
-    for (Entity& ent : app->entities)
-    {
-        glm::mat4 worldViewProjectionMatrix = projectionMatrix * CameraMatrix * ent.worldMatrix;
-
-        //bufferHead = Align(bufferHead, app->uniformBlockAlignment);
-        AlignHead(app->cbuffer, app->uniformBlockAlignment);
-        ent.localParamsOffset = app->cbuffer.head;
-
-        PushMat4(app->cbuffer, ent.worldMatrix);
-        PushMat4(app->cbuffer, worldViewProjectionMatrix);
-
-        //memcpy(bufferData + bufferHead, glm::value_ptr(ent.worldMatrix), sizeof(glm::mat4));
-        //bufferHead += sizeof(glm::mat4);
-
-        //memcpy(bufferData + bufferHead, glm::value_ptr(worldViewProjectionMatrix), sizeof(glm::mat4));
-        //bufferHead += sizeof(glm::mat4);
-
-        ent.localParamsSize = app->cbuffer.head - ent.localParamsOffset;
-    }
-
-    //UnmapBuffer(app->cbuffer);
-    //glUnmapBuffer(GL_UNIFORM_BUFFER);
-    //glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
     // -- Global params ---
 
-    //MapBuffer(app->cbuffer, GL_WRITE_ONLY);
+    MapBuffer(app->cbuffer, GL_WRITE_ONLY);
 
     app->globalParamsOffset = app->cbuffer.head;
 
@@ -455,7 +423,22 @@ void Update(App* app)
 
     app->globalParamsSize = app->cbuffer.head - app->globalParamsOffset;
 
-    UnmapBuffer(app->cbuffer); 
+    // --- Local params ---
+
+    for (Entity& ent : app->entities)
+    {
+        glm::mat4 worldViewProjectionMatrix = projectionMatrix * CameraMatrix * ent.worldMatrix;
+
+        AlignHead(app->cbuffer, app->uniformBlockAlignment);
+        ent.localParamsOffset = app->cbuffer.head;
+
+        PushMat4(app->cbuffer, ent.worldMatrix);
+        PushMat4(app->cbuffer, worldViewProjectionMatrix);
+
+        ent.localParamsSize = app->cbuffer.head - ent.localParamsOffset;
+    }
+
+    UnmapBuffer(app->cbuffer);
 }
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
