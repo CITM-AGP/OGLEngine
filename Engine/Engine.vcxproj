@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Code\assimp_model_loading.h" />
+    <ClInclude Include="Code\buffer_management.h" />
     <ClInclude Include="Code\engine.h" />
     <ClInclude Include="Code\Geometry.h" />
     <ClInclude Include="Code\Mesh.h" />

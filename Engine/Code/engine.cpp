@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include "buffer_management.h"
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName)
 {
@@ -239,11 +240,6 @@ void OnGLError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
     case GL_DEBUG_SEVERITY_MEDIUM: ELOG(" - severity: GL_DEBUG_SEVERITY_MEDIUM"); break; // major performance warnings, shader compilation
     case GL_DEBUG_SEVERITY_LOW: ELOG(" - severity: GL_DEBUG_SEVERITY_LOW"); break; //Redundant state change performance warning
     }
-}
-
-u32 Align(u32 value, u32 alignment)
-{
-    return (value + alignment - 1) & ~(alignment - 1);
 }
 
 void Init(App* app)
