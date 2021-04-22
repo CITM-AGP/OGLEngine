@@ -134,16 +134,22 @@ void main()
 
 	for(int i = 0; i < uLightCount; ++i)
 	{
-	   vec3 L = normalize(uLight[i].direction - uViewDir.xyz); // Light direction 
-	   vec3 R = reflect(-L, N); // reflected vector
-
-	   // Diffuse
-	   float diffuseIntensity = max(0.0, dot(N, L));
-	   diffuseColor += albedo.xyz * uLight[i].color * diffuseIntensity;
-
-	   // Specular
-	   float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
-	   specularColor += specular*uLight[i].color * specularIntensity;
+	    float attenuation = 1.0f;
+		
+		// --- If we have a point light, attenuate according to distance ---
+		if(uLight[i].type == 1)
+			attenuation = 1.0 / length(uLight[i].position - vPosition);
+	        
+	    vec3 L = normalize(uLight[i].direction - uViewDir.xyz); // Light direction 
+	    vec3 R = reflect(-L, N); // reflected vector
+	    
+	    // Diffuse
+	    float diffuseIntensity = max(0.0, dot(N, L));
+	    diffuseColor += attenuation * albedo.xyz * uLight[i].color * diffuseIntensity;
+	    
+	    // Specular
+	    float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
+	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
 	}
 
 	// Final color

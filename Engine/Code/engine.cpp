@@ -329,12 +329,15 @@ void Init(App* app)
     app->entities.push_back(ent3);
 
     // --- Create lights
-    Light light = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), vec3(-2.0, 1.0, 0.0));
-    app->lights.push_back(light);
 
-    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 1.0), vec3(-1.0, 0.0, 0.0), vec3(2.0, 1.0, 0.0));
+    Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 5.0, 0.0));
+    app->lights.push_back(light0);
+
+    Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(50.0, 0.0, 0.0), vec3(-1.0, 1.0, 0.0));
+    app->lights.push_back(light1);
+
+    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 1.0), vec3(-50.0, 0.0, 0.0), vec3(1.0, 1.0, 0.0));
     app->lights.push_back(light2);
-
 }
 
 void Gui(App* app)
