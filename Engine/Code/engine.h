@@ -91,11 +91,13 @@ struct Entity
     u32 localParamsSize;
 };
 
-enum Mode
+enum class Mode
 {
     Mode_TexturedQuad,
     Mode_Model,
-    Mode_Count
+    Mode_Depth,
+    Mode_Normals,
+    Mode_Albedo
 };
 
 struct App
@@ -132,6 +134,11 @@ struct App
     u32 globalParamsOffset;
     u32 globalParamsSize;
     Buffer cbuffer;
+
+    // framebuffer
+    GLuint colorAttachmentHandle;
+    GLuint depthAttachmentHandle;
+    GLuint framebufferHandle;
 
     // texture indices
     u32 diceTexIdx;
