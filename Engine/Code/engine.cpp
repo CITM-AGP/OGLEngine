@@ -250,15 +250,13 @@ void Init(App* app)
     // - programs (and retrieve uniform indices)
     // - textures
 
-    glEnable(GL_DEPTH_TEST);
-
     // --- Open GL info ---
     app->glInfo.version = (const char*)glGetString(GL_VERSION);
     app->glInfo.renderer = (const char*)glGetString(GL_RENDERER);
     app->glInfo.vendor = (const char*)glGetString(GL_VENDOR);
     app->glInfo.shadingLanguageVersion = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
 
-    // --- Framebuffer ---
+    // --- Framebuffer ---    
     glGenTextures(1, &app->colorAttachmentHandle);
     glBindTexture(GL_TEXTURE_2D, app->colorAttachmentHandle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -301,7 +299,6 @@ void Init(App* app)
             default: ELOG("Unknown framebuffer status error");
         }
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // --- Uniform buffers ---
@@ -384,14 +381,14 @@ void Init(App* app)
     app->lights.push_back(light2);
 
     // --- Mode ---
-    app->mode = Mode::Mode_Model;
+    app->mode = Mode::Mode_Depth;
 }
 
 void Gui(App* app)
 {
     bool active = true;
     ImGui::Begin("Scene", &active, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-    ImGui::Image((void*)app->colorAttachmentHandle, ImVec2(app->displaySize.x , app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
+    ImGui::Image((void*)app->framebufferHandle, ImVec2(app->displaySize.x , app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
     ImGui::End();
 
     if (app->showInfo)
@@ -405,11 +402,8 @@ void Gui(App* app)
         ImGui::Text("GPU vendor: %s", app->glInfo.vendor.c_str());
         ImGui::Text("GLSL version: %s", app->glInfo.shadingLanguageVersion.c_str());
 
-
         for (int i = 0; i < app->glInfo.extensions.size(); ++i)
-        {
             ImGui::Text("Extension %i: %s", i, app->glInfo.extensions[i].c_str());
-        }
 
         ImGui::End();
     }
@@ -547,6 +541,42 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
     return vaoHandle;
 }
 
+void DrawEntities(App* app)
+{
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+    glUseProgram(texturedMeshProgram.handle);
+
+    for (Entity& ent : app->entities)
+    {
+        Model& model = app->models[ent.modelIndex];
+        Mesh& mesh = app->meshes[model.meshIdx];
+
+        glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+        glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
+        glEnable(GL_DEPTH_TEST);
+
+        for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+        {
+            GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
+            glBindVertexArray(vao);
+
+            u32 submeshMaterialIdx = model.materialIdx[i];
+            Material& submeshMaterial = app->materials[submeshMaterialIdx];
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+            glUniform1i(app->texturedMeshProgram_uTexture, 0);
+
+            Submesh& submesh = mesh.submeshes[i];
+            glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+        }
+    }
+}
+
 void Render(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Render");
@@ -590,97 +620,27 @@ void Render(App* app)
 
         case Mode::Mode_Model:
         {
-            // --- Framebuffer ---
-            // Render on this framebuffer render targets
             glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
-
-            // Select on which render targets to draw
             GLuint drawBuffers[] = { app->colorAttachmentHandle, app->depthAttachmentHandle };
             glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 
-            // --- Draw entities ---
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-            Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-            glUseProgram(texturedMeshProgram.handle);
-
-            for (Entity& ent : app->entities)
-            {
-                Model& model = app->models[ent.modelIndex];
-                Mesh& mesh = app->meshes[model.meshIdx];
-
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
-
-                for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-                {
-                    GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
-                    glBindVertexArray(vao);
-
-                    u32 submeshMaterialIdx = model.materialIdx[i];
-                    Material& submeshMaterial = app->materials[submeshMaterialIdx];
-
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i(app->texturedMeshProgram_uTexture, 0);
-
-                    Submesh& submesh = mesh.submeshes[i];
-                    glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-                }
-            }
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
-        break;
-
-        case Mode::Mode_Albedo:
-        {
-            // --- Framebuffer ---
-            // Render on this framebuffer render targets
-            glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
-
-            // Select on which render targets to draw
-            GLuint drawBuffers[] = { app->colorAttachmentHandle, app->depthAttachmentHandle };
-            glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
-
-            // --- Draw entities ---
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-            Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-            glUseProgram(texturedMeshProgram.handle);
-
-            for (Entity& ent : app->entities)
-            {
-                Model& model = app->models[ent.modelIndex];
-                Mesh& mesh = app->meshes[model.meshIdx];
-
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
-
-                for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-                {
-                    GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
-                    glBindVertexArray(vao);
-
-                    u32 submeshMaterialIdx = model.materialIdx[i];
-                    Material& submeshMaterial = app->materials[submeshMaterialIdx];
-
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i(app->texturedMeshProgram_uTexture, 0);
-
-                    Submesh& submesh = mesh.submeshes[i];
-                    glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-                }
-            }
+            DrawEntities(app);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
         break;
 
         case Mode::Mode_Depth:
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
+            GLuint drawBuffers[] = { app->colorAttachmentHandle, app->depthAttachmentHandle };
+            glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);            
+
+            DrawEntities(app);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+        break;
+
+        case Mode::Mode_Albedo:
         {
             
         }
