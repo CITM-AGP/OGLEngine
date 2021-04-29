@@ -114,6 +114,9 @@ layout(binding = 0, std140) uniform GlobalParams
 };
 
 layout(location = 0) out vec4 oColor;
+layout(location = 1) out vec4 oDepth;
+layout(location = 2) out vec4 oNormals;
+layout(location = 3) out vec4 oSpecular;
 
 void main()
 {
@@ -157,6 +160,7 @@ void main()
 	//oColor = vec4(uLight[0].color, 1.0);
 
 	oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
+	oDepth = oColor;
 }
 
 #endif
