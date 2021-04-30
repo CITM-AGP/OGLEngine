@@ -267,6 +267,16 @@ void Init(App* app)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    glGenTextures(1, &app->normalsAttachmentHandle);
+    glBindTexture(GL_TEXTURE_2D, app->normalsAttachmentHandle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     glGenTextures(1, &app->depthAttachmentHandle);
     glBindTexture(GL_TEXTURE_2D, app->depthAttachmentHandle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -281,6 +291,8 @@ void Init(App* app)
     glGenFramebuffers(1, &app->framebufferHandle);
     glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, app->colorAttachmentHandle, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, app->normalsAttachmentHandle, 0);
+
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, app->depthAttachmentHandle, 0);
 
     GLenum frameBufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -388,7 +400,7 @@ void Gui(App* app)
 {
     bool active = true;
     ImGui::Begin("Scene", &active, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-    ImGui::Image((void*)app->framebufferHandle, ImVec2(app->displaySize.x , app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
+    ImGui::Image((void*)app->normalsAttachmentHandle, ImVec2(app->displaySize.x , app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
     ImGui::End();
 
     if (app->showInfo)
@@ -434,7 +446,7 @@ void Update(App* app)
 
     ////glm::mat4 worldMatrix = glm::mat4(1.0);
 
-    vec3 cameraPosition = vec3(4.0f, 5.0f, 6.0f);
+    vec3 cameraPosition = vec3(2.0f, 4.0f, 15.0f);
 
     glm::mat4 CameraMatrix = glm::lookAt(
         cameraPosition, // the position of your camera, in world space
@@ -631,11 +643,14 @@ void Render(App* app)
 
         case Mode::Mode_Depth:
         {
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
-            GLuint drawBuffers[] = { app->colorAttachmentHandle, app->depthAttachmentHandle };
-            glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);            
+            GLuint drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+            glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 
             DrawEntities(app);
+
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
         break;

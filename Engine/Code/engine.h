@@ -138,6 +138,8 @@ struct App
     // framebuffer
     GLuint colorAttachmentHandle;
     GLuint depthAttachmentHandle;
+    GLuint normalsAttachmentHandle;
+
     GLuint framebufferHandle;
 
     // texture indices

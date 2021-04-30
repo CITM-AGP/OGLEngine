@@ -118,6 +118,15 @@ layout(location = 1) out vec4 oDepth;
 layout(location = 2) out vec4 oNormals;
 layout(location = 3) out vec4 oSpecular;
 
+float near = 0.1; 
+float far  = 100.0; 
+  
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0; // back to NDC 
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
+
 void main()
 {
 	// Mat parameters
@@ -160,7 +169,18 @@ void main()
 	//oColor = vec4(uLight[0].color, 1.0);
 
 	oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
-	oDepth = oColor;
+	//oDepth = oColor;
+
+	float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
+    oDepth = vec4(normalize(vNormal), 1.0); 
+	oDepth = albedo;
+	//oDepth = vec4(specularColor, 1.0);
+
+	//oDepth = vec4(vec3(depth), 1.0);
+
+	//oDepth = oColor;
+
+	//oColor = vec4(vec3(linearDepth), 1.0);
 }
 
 #endif
