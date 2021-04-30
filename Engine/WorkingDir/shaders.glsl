@@ -114,9 +114,9 @@ layout(binding = 0, std140) uniform GlobalParams
 };
 
 layout(location = 0) out vec4 oColor;
-layout(location = 1) out vec4 oDepth;
-layout(location = 2) out vec4 oNormals;
-layout(location = 3) out vec4 oSpecular;
+layout(location = 1) out vec4 oNormals;
+layout(location = 2) out vec4 oAlbedo;
+layout(location = 3) out vec4 oDepth;
 
 float near = 0.1; 
 float far  = 100.0; 
@@ -164,23 +164,14 @@ void main()
 	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
 	}
 
-	// Final color
-    //oColor = albedo;
-	//oColor = vec4(uLight[0].color, 1.0);
-
+	// Final outputs
 	oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
-	//oDepth = oColor;
+
+    oNormals = vec4(normalize(vNormal), 1.0); 
+	oAlbedo = texture(uTexture, vTexCoord);
 
 	float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
-    oDepth = vec4(normalize(vNormal), 1.0); 
-	oDepth = albedo;
-	//oDepth = vec4(specularColor, 1.0);
-
-	//oDepth = vec4(vec3(depth), 1.0);
-
-	//oDepth = oColor;
-
-	//oColor = vec4(vec3(linearDepth), 1.0);
+	oDepth = vec4(vec3(depth), 1.0);
 }
 
 #endif

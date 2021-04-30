@@ -118,13 +118,13 @@ struct App
     //Buffer uniformbuffer;
     ivec2 displaySize;
 
-    std::vector<Texture>  textures;
-    std::vector<Program>  programs;
-    std::vector<Mesh> meshes;
-    std::vector<Model> models;
-    std::vector<Material> materials;
-    std::vector<Entity> entities;
-    std::vector<Light> lights;
+    std::vector<Texture>    textures;
+    std::vector<Program>    programs;
+    std::vector<Mesh>       meshes;
+    std::vector<Model>      models;
+    std::vector<Material>   materials;
+    std::vector<Entity>     entities;
+    std::vector<Light>      lights;
 
     // program indices
     u32 texturedGeometryProgramIdx;
@@ -136,10 +136,12 @@ struct App
     Buffer cbuffer;
 
     // framebuffer
-    GLuint colorAttachmentHandle;
-    GLuint depthAttachmentHandle;
-    GLuint normalsAttachmentHandle;
+    GLuint modelTextureAttachment;
+    GLuint normalsTextureAttachment;
+    GLuint albedoTextureAttachment;
+    GLuint depthTextureAttachment;
 
+    GLuint depthAttachmentHandle;
     GLuint framebufferHandle;
 
     // texture indices
