@@ -273,6 +273,8 @@ void Init(App* app)
     GenerateFramebufferTexture(app->modelTextureAttachment, app->displaySize);
     GenerateFramebufferTexture(app->normalsTextureAttachment, app->displaySize);
     GenerateFramebufferTexture(app->albedoTextureAttachment, app->displaySize);
+    GenerateFramebufferTexture(app->positionTextureAttachment, app->displaySize);
+
     GenerateFramebufferTexture(app->depthTextureAttachment, app->displaySize);
 
     // Depth
@@ -293,6 +295,7 @@ void Init(App* app)
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, app->normalsTextureAttachment, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, app->albedoTextureAttachment, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, app->depthTextureAttachment, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, app->positionTextureAttachment, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, app->depthAttachmentHandle, 0);
 
     GLenum frameBufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -415,6 +418,10 @@ void Gui(App* app)
     if (ImGui::Button("Depth"))
         app->mode = Mode::Mode_Depth;
 
+    ImGui::SameLine();
+    if (ImGui::Button("Position"))
+        app->mode = Mode::Mode_Position;
+
     ImGui::End();
 
     bool active = true;
@@ -436,6 +443,10 @@ void Gui(App* app)
 
         case Mode::Mode_Depth:
             ImGui::Image((void*)app->depthTextureAttachment, ImVec2(app->displaySize.x, app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
+            break;
+
+        case Mode::Mode_Position:
+            ImGui::Image((void*)app->positionTextureAttachment, ImVec2(app->displaySize.x, app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
             break;
     }
 
@@ -644,7 +655,8 @@ void Render(App* app)
                 GL_COLOR_ATTACHMENT0,
                 GL_COLOR_ATTACHMENT1,
                 GL_COLOR_ATTACHMENT2,
-                GL_COLOR_ATTACHMENT3
+                GL_COLOR_ATTACHMENT3,
+                GL_COLOR_ATTACHMENT4
             };
             glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 

@@ -117,6 +117,7 @@ layout(location = 0) out vec4 oColor;
 layout(location = 1) out vec4 oNormals;
 layout(location = 2) out vec4 oAlbedo;
 layout(location = 3) out vec4 oDepth;
+layout(location = 4) out vec4 oPosition;
 
 float near = 0.1; 
 float far  = 100.0; 
@@ -172,6 +173,8 @@ void main()
 
 	float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
 	oDepth = vec4(vec3(depth), 1.0);
+
+	oPosition = vec4(vec3(vPosition), 1.0);
 }
 
 #endif

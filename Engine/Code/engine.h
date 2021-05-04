@@ -97,7 +97,8 @@ enum class Mode
     Mode_Model,
     Mode_Depth,
     Mode_Normals,
-    Mode_Albedo
+    Mode_Albedo,
+    Mode_Position
 };
 
 struct App
@@ -140,6 +141,8 @@ struct App
     GLuint normalsTextureAttachment;
     GLuint albedoTextureAttachment;
     GLuint depthTextureAttachment;
+    GLuint positionTextureAttachment;
+
 
     GLuint depthAttachmentHandle;
     GLuint framebufferHandle;
