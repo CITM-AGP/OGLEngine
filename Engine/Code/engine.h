@@ -130,6 +130,8 @@ struct App
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
+    u32 deferredGeometryProgramIdx;
+    u32 deferredLghtingProgramIdx;
 
     // lights
     u32 globalParamsOffset;

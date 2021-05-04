@@ -241,11 +241,11 @@ void OnGLError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
     }
 }
 
-void GenerateFramebufferTexture(GLuint& textureHandle, ivec2 displaySize)
+void GenerateFramebufferTexture(GLuint& textureHandle, ivec2 displaySize, GLint type)
 {
     glGenTextures(1, &textureHandle);
     glBindTexture(GL_TEXTURE_2D, textureHandle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displaySize.x, displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displaySize.x, displaySize.y, 0, GL_RGBA, type, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -270,12 +270,12 @@ void Init(App* app)
     app->glInfo.shadingLanguageVersion = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
 
     // --- Framebuffer ---   
-    GenerateFramebufferTexture(app->modelTextureAttachment, app->displaySize);
-    GenerateFramebufferTexture(app->normalsTextureAttachment, app->displaySize);
-    GenerateFramebufferTexture(app->albedoTextureAttachment, app->displaySize);
-    GenerateFramebufferTexture(app->positionTextureAttachment, app->displaySize);
+    GenerateFramebufferTexture(app->modelTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
+    GenerateFramebufferTexture(app->normalsTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
+    GenerateFramebufferTexture(app->albedoTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
+    GenerateFramebufferTexture(app->positionTextureAttachment, app->displaySize, GL_FLOAT);
 
-    GenerateFramebufferTexture(app->depthTextureAttachment, app->displaySize);
+    GenerateFramebufferTexture(app->depthTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
 
     // Depth
     glGenTextures(1, &app->depthAttachmentHandle);
@@ -360,6 +360,10 @@ void Init(App* app)
     app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
     Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
     app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
+
+    app->deferredGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "GEOMETRY_PASS");
+    app->deferredLghtingProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHTING_PASS");
+
 
     // --- Textures ---
     app->diceTexIdx = LoadTexture2D(app, "dice.png");
@@ -495,7 +499,7 @@ void Update(App* app)
 
     ////glm::mat4 worldMatrix = glm::mat4(1.0);
 
-    vec3 cameraPosition = vec3(2.0f, 4.0f, 15.0f);
+    vec3 cameraPosition = vec3(20.0f, 4.0f, 15.0f);
 
     glm::mat4 CameraMatrix = glm::lookAt(
         cameraPosition, // the position of your camera, in world space
@@ -602,6 +606,38 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
     return vaoHandle;
 }
 
+// renderQuad() renders a 1x1 XY quad in NDC
+// -----------------------------------------
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad(App* app)
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
+
+
 void Render(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Render");
@@ -665,21 +701,25 @@ void Render(App* app)
             glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
             // --- Draw entities --
-            Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-            glUseProgram(texturedMeshProgram.handle);
+           /* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+            glUseProgram(texturedMeshProgram.handle);*/
+
+            Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
+            glUseProgram(deferredGeometry.handle);
+
+            glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
             for (Entity& ent : app->entities)
             {
                 Model& model = app->models[ent.modelIndex];
                 Mesh& mesh = app->meshes[model.meshIdx];
 
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
                 glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
                 glEnable(GL_DEPTH_TEST);
 
                 for (u32 i = 0; i < mesh.submeshes.size(); ++i)
                 {
-                    GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
+                    GLuint vao = FindVAO(mesh, i, deferredGeometry);
                     glBindVertexArray(vao);
 
                     u32 submeshMaterialIdx = model.materialIdx[i];
@@ -693,8 +733,30 @@ void Render(App* app)
                     glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
                 }
             }
+
+            //if (app->mode == Mode::Mode_Model)
+            //{
+            //    Program& deferredLighting = app->programs[app->deferredLghtingProgramIdx];
+            //    glUseProgram(deferredLighting.handle);
+            //    //glActiveTexture(GL_TEXTURE0);
+            //    //glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
+            //    //glActiveTexture(GL_TEXTURE1);
+            //    //glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
+            //    //glActiveTexture(GL_TEXTURE2);
+            //    //glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
+            //    //glActiveTexture(GL_TEXTURE3);
+            //    //glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
+
+            //    glDepthMask(false);
+            //    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+            //    renderQuad(app);
+            //    glDepthMask(true);
+
+            //}
+
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     }
     glPopDebugGroup();
 }
+
