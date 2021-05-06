@@ -299,8 +299,7 @@ void main()
 // TODO: Write your vertex shader here
 
 layout(location=0) in vec3 aPosition;
-layout(location=1) in vec3 aNormal;
-layout(location=2) in vec2 aTexCoord;
+layout(location=1) in vec2 aTexCoord;
 
 struct Light
 {
@@ -348,7 +347,7 @@ struct Light
 in vec2 vTexCoord;
 in vec3 ViewPos; // in worldspace
 
-uniform sampler2D uTexture;
+//uniform sampler2D uTexture;
 
 layout(binding = 0, std140) uniform GlobalParams
 {
@@ -357,29 +356,31 @@ layout(binding = 0, std140) uniform GlobalParams
 	Light uLight[16];
 };
 
-layout(location = 0) out vec4 oColor;
-layout(location = 1) out vec4 oNormals;
-layout(location = 2) out vec4 oAlbedo;
-layout(location = 3) out vec4 oDepth;
-layout(location = 4) out vec4 oPosition;
+uniform sampler2D oNormals;
+uniform sampler2D oAlbedo;
+uniform sampler2D oDepth;
+uniform sampler2D oPosition;
 
-//uniform sampler2D oNormals;
-//uniform sampler2D oAlbedo;
-//uniform sampler2D oDepth;
-//uniform sampler2D oPosition;
+layout(location = 0) out vec4 oColor;
+//layout(location = 1) out vec4 oNormals;
+//layout(location = 2) out vec4 oAlbedo;
+//layout(location = 3) out vec4 oDepth;
+//layout(location = 4) out vec4 oPosition;
+
+
 
 void main()
 {
     // G buffer
-//	vec3 vposition = texture(oPosition, vTexCoord).rgb;
-//	vec3 Normal = texture(oNormals, vTexCoord).rgb;
-//	vec3 albedo = texture(oAlbedo, vTexCoord).rgb;
-//	vec3 viewDir = normalize(ViewPos - vposition);
-
-    vec3 vposition = oPosition.xyz;
-	vec3 Normal = oNormals.xyz;
-	vec3 albedo = oAlbedo.xyz;
+	vec3 vposition = texture(oPosition, vTexCoord).rgb;
+	vec3 Normal = texture(oNormals, vTexCoord).rgb;
+	vec3 albedo = texture(oAlbedo, vTexCoord).rgb;
 	vec3 viewDir = normalize(ViewPos - vposition);
+
+//    vec3 vposition = oPosition.xyz;
+//	vec3 Normal = oNormals.xyz;
+//	vec3 albedo = oAlbedo.xyz;
+//	vec3 viewDir = normalize(ViewPos - vposition);
 
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
@@ -417,7 +418,8 @@ void main()
 	}
 
 	// Final outputs
-	oColor = vec4(1.0);
+    oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
+	//oColor = vec4(vposition, 1.0);
 	//oPosition = vec4(1.0);
 	//oColor = vec4(vec3(0.0), 1.0);
 }

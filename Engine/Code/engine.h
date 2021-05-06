@@ -131,7 +131,7 @@ struct App
     u32 texturedGeometryProgramIdx;
     u32 texturedMeshProgramIdx;
     u32 deferredGeometryProgramIdx;
-    u32 deferredLghtingProgramIdx;
+    u32 deferredLightingProgramIdx;
 
     // lights
     u32 globalParamsOffset;
@@ -157,7 +157,7 @@ struct App
     u32 magentaTexIdx;
 
     u32 model;
-    u32 texturedMeshProgram_uTexture;
+    //u32 texturedMeshProgram_uTexture;
 
     // Mode
     Mode mode;

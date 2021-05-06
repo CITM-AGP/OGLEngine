@@ -362,7 +362,7 @@ void Init(App* app)
     app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
 
     app->deferredGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "GEOMETRY_PASS");
-    app->deferredLghtingProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHTING_PASS");
+    app->deferredLightingProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHTING_PASS");
 
 
     // --- Textures ---
@@ -499,7 +499,7 @@ void Update(App* app)
 
     ////glm::mat4 worldMatrix = glm::mat4(1.0);
 
-    vec3 cameraPosition = vec3(20.0f, 4.0f, 15.0f);
+    vec3 cameraPosition = vec3(5.0f, 4.0f, 15.0f);
 
     glm::mat4 CameraMatrix = glm::lookAt(
         cameraPosition, // the position of your camera, in world space
@@ -688,7 +688,7 @@ void Render(App* app)
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-            glUniform1i(app->texturedMeshProgram_uTexture, 0);
+            //glUniform1i(app->texturedMeshProgram_uTexture, 0);
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -697,16 +697,25 @@ void Render(App* app)
 
     if (app->mode == Mode::Mode_Model)
     {
-        Program& deferredLighting = app->programs[app->deferredLghtingProgramIdx];
+        //glEnable(GL_TEXTURE_2D);
+
+        Program& deferredLighting = app->programs[app->deferredLightingProgramIdx];
         glUseProgram(deferredLighting.handle);
-        //glActiveTexture(GL_TEXTURE0);
-        //glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
-        //glActiveTexture(GL_TEXTURE1);
-        //glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
-        //glActiveTexture(GL_TEXTURE2);
-        //glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
-        //glActiveTexture(GL_TEXTURE3);
-        //glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
+
+        glUniform1i(glGetUniformLocation(deferredLighting.handle, "oNormals"), 0);
+        glUniform1i(glGetUniformLocation(deferredLighting.handle, "oAlbedo"), 1);
+        glUniform1i(glGetUniformLocation(deferredLighting.handle, "oDepth"), 2);
+        glUniform1i(glGetUniformLocation(deferredLighting.handle, "oPosition"), 3);
+
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
 
         glDepthMask(false);
         glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
