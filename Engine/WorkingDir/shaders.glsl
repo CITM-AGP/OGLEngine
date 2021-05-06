@@ -334,8 +334,6 @@ void main()
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
-// TODO: Write your fragment shader here
-
 struct Light
 {
 	unsigned int type;
@@ -346,8 +344,6 @@ struct Light
 
 in vec2 vTexCoord;
 in vec3 ViewPos; // in worldspace
-
-//uniform sampler2D uTexture;
 
 layout(binding = 0, std140) uniform GlobalParams
 {
@@ -362,12 +358,6 @@ uniform sampler2D oDepth;
 uniform sampler2D oPosition;
 
 layout(location = 0) out vec4 oColor;
-//layout(location = 1) out vec4 oNormals;
-//layout(location = 2) out vec4 oAlbedo;
-//layout(location = 3) out vec4 oDepth;
-//layout(location = 4) out vec4 oPosition;
-
-
 
 void main()
 {
@@ -377,15 +367,9 @@ void main()
 	vec3 albedo = texture(oAlbedo, vTexCoord).rgb;
 	vec3 viewDir = normalize(ViewPos - vposition);
 
-//    vec3 vposition = oPosition.xyz;
-//	vec3 Normal = oNormals.xyz;
-//	vec3 albedo = oAlbedo.xyz;
-//	vec3 viewDir = normalize(ViewPos - vposition);
-
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
     float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
-	//vec4 albedo = texture(uTexture, vTexCoord);
 
 	// Ambient
     float ambientIntensity = 0.4;
@@ -416,12 +400,11 @@ void main()
 	    float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
 	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
 	}
-
+	
 	// Final outputs
+    //oColor = vec4(Normal, 1.0);
     oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
-	//oColor = vec4(vposition, 1.0);
-	//oPosition = vec4(1.0);
-	//oColor = vec4(vec3(0.0), 1.0);
+
 }
 
 #endif

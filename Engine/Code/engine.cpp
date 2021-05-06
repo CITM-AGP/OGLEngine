@@ -377,20 +377,20 @@ void Init(App* app)
 
     // --- Create entities ---
     Entity ent = Entity(glm::mat4(1.0), app->model, 0, 0);
-    ent.worldMatrix = glm::translate(ent.worldMatrix, vec3(-3.0, 1.0, 5.0));
+    ent.worldMatrix = glm::translate(ent.worldMatrix, vec3(-5.0, 1.0, 5.0));
     app->entities.push_back(ent);
 
     Entity ent2 = Entity(glm::mat4(1.0), app->model, 0, 0);
-    ent2.worldMatrix = glm::translate(ent2.worldMatrix, vec3(0.0, 1.0, 2.0));
+    ent2.worldMatrix = glm::translate(ent2.worldMatrix, vec3(2.5f, 1.0, 2.0));
     app->entities.push_back(ent2);
 
     Entity ent3 = Entity(glm::mat4(1.0), app->model, 0, 0);
-    ent3.worldMatrix = glm::translate(ent3.worldMatrix, vec3(3.0, 1.0, -2.0));
+    ent3.worldMatrix = glm::translate(ent3.worldMatrix, vec3(2.0, 2.0, -2.0));
     app->entities.push_back(ent3);
 
     // --- Create lights
 
-    Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 5.0, 0.0));
+    Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0));
     app->lights.push_back(light0);
 
     Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(50.0, 0.0, 0.0), vec3(-1.0, 1.0, 0.0));
@@ -665,6 +665,8 @@ void Render(App* app)
    /* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     glUseProgram(texturedMeshProgram.handle);*/
 
+    // deferred geometry pass
+
     Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
     glUseProgram(deferredGeometry.handle);
 
@@ -695,10 +697,9 @@ void Render(App* app)
         }
     }
 
+    // deferred lighting pass
     if (app->mode == Mode::Mode_Model)
     {
-        //glEnable(GL_TEXTURE_2D);
-
         Program& deferredLighting = app->programs[app->deferredLightingProgramIdx];
         glUseProgram(deferredLighting.handle);
 
@@ -706,7 +707,6 @@ void Render(App* app)
         glUniform1i(glGetUniformLocation(deferredLighting.handle, "oAlbedo"), 1);
         glUniform1i(glGetUniformLocation(deferredLighting.handle, "oDepth"), 2);
         glUniform1i(glGetUniformLocation(deferredLighting.handle, "oPosition"), 3);
-
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
@@ -717,11 +717,15 @@ void Render(App* app)
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
 
+        GLuint drawBuffers[] =
+        {
+            GL_COLOR_ATTACHMENT0,
+        };
+        glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
         glDepthMask(false);
         glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
         renderQuad(app);
         glDepthMask(true);
-
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
