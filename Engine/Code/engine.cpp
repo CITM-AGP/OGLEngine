@@ -642,6 +642,81 @@ void Render(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Render");
 
+    // --- Framebuffer ---
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
+
+    GLuint drawBuffers[] =
+    {
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1,
+        GL_COLOR_ATTACHMENT2,
+        GL_COLOR_ATTACHMENT3,
+        GL_COLOR_ATTACHMENT4
+    };
+    glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    // --- Draw entities --
+   /* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+    glUseProgram(texturedMeshProgram.handle);*/
+
+    Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
+    glUseProgram(deferredGeometry.handle);
+
+    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+
+    for (Entity& ent : app->entities)
+    {
+        Model& model = app->models[ent.modelIndex];
+        Mesh& mesh = app->meshes[model.meshIdx];
+
+        glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
+        glEnable(GL_DEPTH_TEST);
+
+        for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+        {
+            GLuint vao = FindVAO(mesh, i, deferredGeometry);
+            glBindVertexArray(vao);
+
+            u32 submeshMaterialIdx = model.materialIdx[i];
+            Material& submeshMaterial = app->materials[submeshMaterialIdx];
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+            glUniform1i(app->texturedMeshProgram_uTexture, 0);
+
+            Submesh& submesh = mesh.submeshes[i];
+            glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+        }
+    }
+
+    if (app->mode == Mode::Mode_Model)
+    {
+        Program& deferredLighting = app->programs[app->deferredLghtingProgramIdx];
+        glUseProgram(deferredLighting.handle);
+        //glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
+        //glActiveTexture(GL_TEXTURE1);
+        //glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
+        //glActiveTexture(GL_TEXTURE2);
+        //glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
+        //glActiveTexture(GL_TEXTURE3);
+        //glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
+
+        glDepthMask(false);
+        glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+        renderQuad(app);
+        glDepthMask(true);
+
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     switch (app->mode)
     {
         case Mode::Mode_TexturedQuad:
@@ -656,105 +731,105 @@ void Render(App* app)
             // - bind the vao
             // - glDrawElements() !!!
 
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+            //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            //glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-            Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
-            glUseProgram(programTexturedGeometry.handle);
-            glBindVertexArray(app->vao);
+            //Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
+            //glUseProgram(programTexturedGeometry.handle);
+            //glBindVertexArray(app->vao);
 
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            //glEnable(GL_BLEND);
+            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            glUniform1i(app->programUniformTexture, 0);
-            glActiveTexture(GL_TEXTURE0);
-            GLuint textureHandle = app->textures[app->diceTexIdx].handle;
-            glBindTexture(GL_TEXTURE_2D, textureHandle);
-            
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+            //glUniform1i(app->programUniformTexture, 0);
+            //glActiveTexture(GL_TEXTURE0);
+            //GLuint textureHandle = app->textures[app->diceTexIdx].handle;
+            //glBindTexture(GL_TEXTURE_2D, textureHandle);
+            //
+            //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
-            glBindVertexArray(0);
-            glUseProgram(0);
+            //glBindVertexArray(0);
+            //glUseProgram(0);
         }
         break;
 
-        case Mode::Mode_Model:
+        case Mode::Mode_Model :
         {
-            // --- Framebuffer ---
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
+           // // --- Framebuffer ---
+           // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+           // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+           // glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
 
-            GLuint drawBuffers[] =
-            {
-                GL_COLOR_ATTACHMENT0,
-                GL_COLOR_ATTACHMENT1,
-                GL_COLOR_ATTACHMENT2,
-                GL_COLOR_ATTACHMENT3,
-                GL_COLOR_ATTACHMENT4
-            };
-            glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+           // GLuint drawBuffers[] =
+           // {
+           //     GL_COLOR_ATTACHMENT0,
+           //     GL_COLOR_ATTACHMENT1,
+           //     GL_COLOR_ATTACHMENT2,
+           //     GL_COLOR_ATTACHMENT3,
+           //     GL_COLOR_ATTACHMENT4
+           // };
+           // glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+           // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+           // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+           // glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-            // --- Draw entities --
-           /* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-            glUseProgram(texturedMeshProgram.handle);*/
+           // // --- Draw entities --
+           ///* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
+           // glUseProgram(texturedMeshProgram.handle);*/
 
-            Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
-            glUseProgram(deferredGeometry.handle);
+           // Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
+           // glUseProgram(deferredGeometry.handle);
 
-            glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+           // glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
-            for (Entity& ent : app->entities)
-            {
-                Model& model = app->models[ent.modelIndex];
-                Mesh& mesh = app->meshes[model.meshIdx];
+           // for (Entity& ent : app->entities)
+           // {
+           //     Model& model = app->models[ent.modelIndex];
+           //     Mesh& mesh = app->meshes[model.meshIdx];
 
-                glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
-                glEnable(GL_DEPTH_TEST);
+           //     glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
+           //     glEnable(GL_DEPTH_TEST);
 
-                for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-                {
-                    GLuint vao = FindVAO(mesh, i, deferredGeometry);
-                    glBindVertexArray(vao);
+           //     for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+           //     {
+           //         GLuint vao = FindVAO(mesh, i, deferredGeometry);
+           //         glBindVertexArray(vao);
 
-                    u32 submeshMaterialIdx = model.materialIdx[i];
-                    Material& submeshMaterial = app->materials[submeshMaterialIdx];
+           //         u32 submeshMaterialIdx = model.materialIdx[i];
+           //         Material& submeshMaterial = app->materials[submeshMaterialIdx];
 
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i(app->texturedMeshProgram_uTexture, 0);
+           //         glActiveTexture(GL_TEXTURE0);
+           //         glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+           //         glUniform1i(app->texturedMeshProgram_uTexture, 0);
 
-                    Submesh& submesh = mesh.submeshes[i];
-                    glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-                }
-            }
+           //         Submesh& submesh = mesh.submeshes[i];
+           //         glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+           //     }
+           // }
 
-            //if (app->mode == Mode::Mode_Model)
-            //{
-            //    Program& deferredLighting = app->programs[app->deferredLghtingProgramIdx];
-            //    glUseProgram(deferredLighting.handle);
-            //    //glActiveTexture(GL_TEXTURE0);
-            //    //glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
-            //    //glActiveTexture(GL_TEXTURE1);
-            //    //glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
-            //    //glActiveTexture(GL_TEXTURE2);
-            //    //glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
-            //    //glActiveTexture(GL_TEXTURE3);
-            //    //glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
+           // if (app->mode == Mode::Mode_Model)
+           // {
+           //     Program& deferredLighting = app->programs[app->deferredLghtingProgramIdx];
+           //     glUseProgram(deferredLighting.handle);
+           //     //glActiveTexture(GL_TEXTURE0);
+           //     //glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
+           //     //glActiveTexture(GL_TEXTURE1);
+           //     //glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
+           //     //glActiveTexture(GL_TEXTURE2);
+           //     //glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
+           //     //glActiveTexture(GL_TEXTURE3);
+           //     //glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
 
-            //    glDepthMask(false);
-            //    glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
-            //    renderQuad(app);
-            //    glDepthMask(true);
+           //     glDepthMask(false);
+           //     glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+           //     renderQuad(app);
+           //     glDepthMask(true);
 
-            //}
+           // }
 
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+           // glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     }
     glPopDebugGroup();
