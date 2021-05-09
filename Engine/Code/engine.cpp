@@ -719,12 +719,9 @@ void Render(App* app)
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
 
-        GLuint drawBuffers[] =
-        {
-            GL_COLOR_ATTACHMENT0,
-        };
-
+        GLuint drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
         glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+
         glDepthMask(false);
         glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
         renderQuad(app);
