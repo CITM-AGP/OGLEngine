@@ -88,6 +88,8 @@ void OnGlfwKeyboardEvent(GLFWwindow* window, int key, int scancode, int action, 
         case GLFW_KEY_Y: key = K_Y; break; case GLFW_KEY_Z: key = K_Z; break;
         case GLFW_KEY_ESCAPE: key = K_ESCAPE; break;
         case GLFW_KEY_ENTER:  key = K_ENTER; break;
+        case GLFW_KEY_LEFT_SHIFT: key = K_LEFT_SHIFT; break;
+        case GLFW_KEY_RIGHT_SHIFT: key = K_RIGHT_SHIFT; break;
     }
 
     App* app = (App*)glfwGetWindowUserPointer(window);
@@ -167,7 +169,7 @@ int main()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;        // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
     //io.ConfigViewportsNoAutoMerge = true;
     //io.ConfigViewportsNoTaskBarIcon = true;
 

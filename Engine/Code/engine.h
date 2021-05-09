@@ -169,7 +169,7 @@ struct App
 
     // OpenGL info
     OpenGLInfo glInfo;
-    bool showInfo = true;
+    bool showInfo = false;
 
     // Embedded geometry (in-editor simple meshes such as
     // a screen filling quad, a cube, a sphere...)

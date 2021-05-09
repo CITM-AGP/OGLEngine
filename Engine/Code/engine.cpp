@@ -387,7 +387,7 @@ void Init(App* app)
     app->entities.push_back(ent3);
 
     // --- Create lights
-    Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0));
+    Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0)); 
     app->lights.push_back(light0);
 
     Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(50.0, 0.0, 0.0), vec3(-1.0, 1.0, 0.0));
@@ -421,59 +421,41 @@ void Init(App* app)
 
 void Gui(App* app)
 {
-    ImGui::Begin("Render mode");
-
-    if (ImGui::Button("Model"))
-        app->mode = Mode::Mode_Model;
-
-    ImGui::SameLine();
-    if (ImGui::Button("Normals"))
-        app->mode = Mode::Mode_Normals;
-
-    ImGui::SameLine();
-    if (ImGui::Button("Albedo"))
-        app->mode = Mode::Mode_Albedo;
-
-    ImGui::SameLine();
-    if (ImGui::Button("Depth"))
-        app->mode = Mode::Mode_Depth;
-
-    ImGui::SameLine();
-    if (ImGui::Button("Position"))
-        app->mode = Mode::Mode_Position;
-
-    ImGui::End();
-
-    ImGui::Begin("Scene");
-
-    switch (app->mode)
+    ImGui::BeginMainMenuBar();     
+    if (ImGui::BeginMenu("Render mode"))
     {
-        case Mode::Mode_Model:
-            ImGui::Image((void*)app->modelTextureAttachment, ImVec2(app->displaySize.x , app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
-            break;
+        if (ImGui::MenuItem("Model"))
+            app->mode = Mode::Mode_Model;
 
-        case Mode::Mode_Normals:
-            ImGui::Image((void*)app->normalsTextureAttachment, ImVec2(app->displaySize.x, app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
-            break;
+        if (ImGui::MenuItem("Normals"))
+            app->mode = Mode::Mode_Normals;
 
-        case Mode::Mode_Albedo:
-            ImGui::Image((void*)app->albedoTextureAttachment, ImVec2(app->displaySize.x, app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
-            break;
+        if (ImGui::MenuItem("Albedo"))
+            app->mode = Mode::Mode_Albedo;
 
-        case Mode::Mode_Depth:
-            ImGui::Image((void*)app->depthTextureAttachment, ImVec2(app->displaySize.x, app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
-            break;
+        if (ImGui::MenuItem("Depth"))
+            app->mode = Mode::Mode_Depth;
 
-        case Mode::Mode_Position:
-            ImGui::Image((void*)app->positionTextureAttachment, ImVec2(app->displaySize.x, app->displaySize.y), ImVec2(0, 1), ImVec2(1, 0));
-            break;
+        if (ImGui::MenuItem("Position"))
+            app->mode = Mode::Mode_Position;
+
+        ImGui::EndMenu();
     }
 
-    ImGui::End();
+    if (ImGui::BeginMenu("App info"))
+    {
+        if (ImGui::MenuItem("Info window"))
+            app->showInfo = !app->showInfo;
+
+        ImGui::EndMenu();
+    }
+
+    ImGui::EndMainMenuBar();
 
     if (app->showInfo)
     {
-        ImGui::Begin("Info");
+    bool test = false;
+        ImGui::Begin("Info", &app->showInfo);
         ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
 
         // --- Open GL info ---
@@ -494,7 +476,7 @@ void HandleUserInput(App* app)
     vec3 newPos(0.0f);
     float speed = 10.0f * app->deltaTime; 
     
-    if (app->input.keys[K_0] == BUTTON_PRESSED) speed = 20.0f * app->deltaTime;
+    if (app->input.keys[K_LEFT_SHIFT] == BUTTON_PRESSED) speed = 20.0f * app->deltaTime;
 
     if (app->input.keys[K_W] == BUTTON_PRESSED) newPos.z -= speed;
     if (app->input.keys[K_S] == BUTTON_PRESSED) newPos.z += speed;
@@ -518,10 +500,6 @@ void HandleUserInput(App* app)
 
 void Update(App* app)
 {
-    // You can handle app->input keyboard/mouse here
-    if (app->input.keys[K_ENTER] == BUTTON_PRESS)
-        app->showInfo = !app->showInfo;
-
     for (u64 i = 0; i < app->programs.size(); ++i)
     {
         Program& program = app->programs[i];
@@ -638,7 +616,8 @@ void renderQuad(App* app)
 {
     if (quadVAO == 0)
     {
-        float quadVertices[] = {
+        float quadVertices[] = 
+        {
             // positions        // texture Coords
             -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
             -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -688,7 +667,7 @@ void Render(App* app)
    /* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     glUseProgram(texturedMeshProgram.handle);*/
 
-    // deferred geometry pass
+    // Deferred geometry pass
 
     Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
     glUseProgram(deferredGeometry.handle);
@@ -753,129 +732,43 @@ void Render(App* app)
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0); 
-    
-    /*glBindVertexArray(app->vao);
+
+    // --- Draw framebuffer texture ---
+    Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
+    glUseProgram(programTexturedGeometry.handle);
+    glBindVertexArray(app->vao);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);    
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
-    glBindVertexArray(0);*/
+
+    glUniform1i(app->programUniformTexture, 0);
+    glActiveTexture(GL_TEXTURE0);
 
     switch (app->mode)
     {
-        case Mode::Mode_TexturedQuad:
-        {
-            // TODO: Draw your textured quad here!
-            // - clear the framebuffer
-            // - set the viewport
-            // - set the blending state
-            // - bind the texture into unit 0
-            // - bind the program 
-            //   (...and make its texture sample from unit 0)
-            // - bind the vao
-            // - glDrawElements() !!!
+        case Mode::Mode_Model:
+            glBindTexture(GL_TEXTURE_2D, app->modelTextureAttachment);
+            break;
 
-            //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            //glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+        case Mode::Mode_Normals:
+            glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
+            break;
 
-            //Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
-            //glUseProgram(programTexturedGeometry.handle);
-            //glBindVertexArray(app->vao);
+        case Mode::Mode_Albedo:
+            glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
+            break;
 
-            //glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        case Mode::Mode_Depth:
+            glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
+            break;
 
-            //glUniform1i(app->programUniformTexture, 0);
-            //glActiveTexture(GL_TEXTURE0);
-            //GLuint textureHandle = app->textures[app->diceTexIdx].handle;
-            //glBindTexture(GL_TEXTURE_2D, textureHandle);
-            //
-            //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
-
-            //glBindVertexArray(0);
-            //glUseProgram(0);
-        }
-        break;
-
-        case Mode::Mode_Model :
-        {
-           // // --- Framebuffer ---
-           // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-           // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-           // glBindFramebuffer(GL_FRAMEBUFFER, app->framebufferHandle);
-
-           // GLuint drawBuffers[] =
-           // {
-           //     GL_COLOR_ATTACHMENT0,
-           //     GL_COLOR_ATTACHMENT1,
-           //     GL_COLOR_ATTACHMENT2,
-           //     GL_COLOR_ATTACHMENT3,
-           //     GL_COLOR_ATTACHMENT4
-           // };
-           // glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
-
-           // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-           // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-           // glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-           // // --- Draw entities --
-           ///* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-           // glUseProgram(texturedMeshProgram.handle);*/
-
-           // Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
-           // glUseProgram(deferredGeometry.handle);
-
-           // glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
-
-           // for (Entity& ent : app->entities)
-           // {
-           //     Model& model = app->models[ent.modelIndex];
-           //     Mesh& mesh = app->meshes[model.meshIdx];
-
-           //     glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cbuffer.handle, ent.localParamsOffset, ent.localParamsSize);
-           //     glEnable(GL_DEPTH_TEST);
-
-           //     for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-           //     {
-           //         GLuint vao = FindVAO(mesh, i, deferredGeometry);
-           //         glBindVertexArray(vao);
-
-           //         u32 submeshMaterialIdx = model.materialIdx[i];
-           //         Material& submeshMaterial = app->materials[submeshMaterialIdx];
-
-           //         glActiveTexture(GL_TEXTURE0);
-           //         glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-           //         glUniform1i(app->texturedMeshProgram_uTexture, 0);
-
-           //         Submesh& submesh = mesh.submeshes[i];
-           //         glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-           //     }
-           // }
-
-           // if (app->mode == Mode::Mode_Model)
-           // {
-           //     Program& deferredLighting = app->programs[app->deferredLghtingProgramIdx];
-           //     glUseProgram(deferredLighting.handle);
-           //     //glActiveTexture(GL_TEXTURE0);
-           //     //glBindTexture(GL_TEXTURE_2D, app->normalsTextureAttachment);
-           //     //glActiveTexture(GL_TEXTURE1);
-           //     //glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);
-           //     //glActiveTexture(GL_TEXTURE2);
-           //     //glBindTexture(GL_TEXTURE_2D, app->depthTextureAttachment);
-           //     //glActiveTexture(GL_TEXTURE3);
-           //     //glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
-
-           //     glDepthMask(false);
-           //     glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
-           //     renderQuad(app);
-           //     glDepthMask(true);
-
-           // }
-
-           // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
+        case Mode::Mode_Position:
+            glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
+            break;
     }
+    
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
     glPopDebugGroup();
 }
-
