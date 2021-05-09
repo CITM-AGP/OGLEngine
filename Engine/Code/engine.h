@@ -110,6 +110,12 @@ struct App
     // Input
     Input input;
 
+    // Camera
+    vec3 cameraPosition;
+    vec3 cameraReference;
+    glm::mat4 cameraMatrix;
+    glm::mat4 projectionMatrix;
+
     // Graphics
     char gpuName[64];
     char openGlVersion[64];
@@ -144,7 +150,6 @@ struct App
     GLuint albedoTextureAttachment;
     GLuint depthTextureAttachment;
     GLuint positionTextureAttachment;
-
 
     GLuint depthAttachmentHandle;
     GLuint framebufferHandle;

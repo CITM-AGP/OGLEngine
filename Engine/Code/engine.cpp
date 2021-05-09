@@ -273,9 +273,8 @@ void Init(App* app)
     GenerateFramebufferTexture(app->modelTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
     GenerateFramebufferTexture(app->normalsTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
     GenerateFramebufferTexture(app->albedoTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
-    GenerateFramebufferTexture(app->positionTextureAttachment, app->displaySize, GL_FLOAT);
-
     GenerateFramebufferTexture(app->depthTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
+    GenerateFramebufferTexture(app->positionTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
 
     // Depth
     glGenTextures(1, &app->depthAttachmentHandle);
@@ -364,7 +363,6 @@ void Init(App* app)
     app->deferredGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "GEOMETRY_PASS");
     app->deferredLightingProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHTING_PASS");
 
-
     // --- Textures ---
     app->diceTexIdx = LoadTexture2D(app, "dice.png");
     app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
@@ -389,7 +387,6 @@ void Init(App* app)
     app->entities.push_back(ent3);
 
     // --- Create lights
-
     Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0));
     app->lights.push_back(light0);
 
@@ -398,6 +395,25 @@ void Init(App* app)
 
     Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 1.0), vec3(-50.0, 0.0, 0.0), vec3(1.0, 1.0, 0.0));
     app->lights.push_back(light2);
+
+    // --- Camera ---
+    app->cameraReference = vec3(0.0f);
+    app->cameraPosition = vec3(0.0f, 4.0f, 15.0f);
+
+    app->cameraMatrix = glm::lookAt
+    (
+        app->cameraPosition,        // the position of your camera, in world space
+        app->cameraReference,       // where you want to look at, in world space
+        glm::vec3(0, 1, 0)          // probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down, which can be great too
+    );
+
+    // Generates a really hard-to-read matrix, but a normal, standard 4x4 matrix nonetheless
+    app->projectionMatrix = glm::perspective(
+        glm::radians(60.0f),        // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
+        4.0f / 3.0f,                // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
+        0.1f,                       // Near clipping plane. Keep as big as possible, or you'll get precision issues.
+        100.0f                      // Far clipping plane. Keep as little as possible.
+    );
 
     // --- Mode ---
     app->mode = Mode::Mode_Model;
@@ -428,8 +444,7 @@ void Gui(App* app)
 
     ImGui::End();
 
-    bool active = true;
-    ImGui::Begin("Scene", &active, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::Begin("Scene");
 
     switch (app->mode)
     {
@@ -474,10 +489,37 @@ void Gui(App* app)
     }
 }
 
+void HandleUserInput(App* app)
+{
+    vec3 newPos(0.0f);
+    float speed = 10.0f * app->deltaTime; 
+    
+    if (app->input.keys[K_0] == BUTTON_PRESSED) speed = 20.0f * app->deltaTime;
+
+    if (app->input.keys[K_W] == BUTTON_PRESSED) newPos.z -= speed;
+    if (app->input.keys[K_S] == BUTTON_PRESSED) newPos.z += speed;
+
+    if (app->input.keys[K_D] == BUTTON_PRESSED) newPos.x += speed;
+    if (app->input.keys[K_A] == BUTTON_PRESSED) newPos.x -= speed;
+
+    if (app->input.keys[K_T] == BUTTON_PRESSED) newPos.y += speed;
+    if (app->input.keys[K_G] == BUTTON_PRESSED) newPos.y -= speed;
+
+    app->cameraPosition += newPos;
+    app->cameraReference += newPos;
+
+    app->cameraMatrix = glm::lookAt
+    (
+        app->cameraPosition, 
+        app->cameraReference,
+        glm::vec3(0, 1, 0)        
+    );
+}
+
 void Update(App* app)
 {
     // You can handle app->input keyboard/mouse here
-    if (app->input.keys[0] == BUTTON_PRESS)
+    if (app->input.keys[K_ENTER] == BUTTON_PRESS)
         app->showInfo = !app->showInfo;
 
     for (u64 i = 0; i < app->programs.size(); ++i)
@@ -495,31 +537,13 @@ void Update(App* app)
         }
     }
 
-    //// --- Fill uniform buffer ---
-
-    ////glm::mat4 worldMatrix = glm::mat4(1.0);
-
-    vec3 cameraPosition = vec3(5.0f, 4.0f, 15.0f);
-
-    glm::mat4 CameraMatrix = glm::lookAt(
-        cameraPosition, // the position of your camera, in world space
-        vec3(0.0f),   // where you want to look at, in world space
-        glm::vec3(0,1,0)        // probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down, which can be great too
-    );    
-
-    // Generates a really hard-to-read matrix, but a normal, standard 4x4 matrix nonetheless
-    glm::mat4 projectionMatrix = glm::perspective(
-        glm::radians(60.0f), // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
-        4.0f / 3.0f,       // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
-        0.1f,              // Near clipping plane. Keep as big as possible, or you'll get precision issues.
-        100.0f             // Far clipping plane. Keep as little as possible.
-    );
+    HandleUserInput(app);
     
     // --- Global params ---
     MapBuffer(app->cbuffer, GL_WRITE_ONLY);
     app->globalParamsOffset = app->cbuffer.head;
 
-    PushVec3(app->cbuffer, cameraPosition);
+    PushVec3(app->cbuffer, app->cameraPosition);
     PushUInt(app->cbuffer, app->lights.size());
 
     for (u32 i = 0; i < app->lights.size(); ++i)
@@ -538,7 +562,7 @@ void Update(App* app)
     // --- Local params ---
     for (Entity& ent : app->entities)
     {
-        glm::mat4 worldViewProjectionMatrix = projectionMatrix * CameraMatrix * ent.worldMatrix;
+        glm::mat4 worldViewProjectionMatrix = app->projectionMatrix * app->cameraMatrix * ent.worldMatrix;
 
         AlignHead(app->cbuffer, app->uniformBlockAlignment);
         ent.localParamsOffset = app->cbuffer.head;
@@ -637,7 +661,6 @@ void renderQuad(App* app)
     glBindVertexArray(0);
 }
 
-
 void Render(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Render");
@@ -721,6 +744,7 @@ void Render(App* app)
         {
             GL_COLOR_ATTACHMENT0,
         };
+
         glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
         glDepthMask(false);
         glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
@@ -728,7 +752,14 @@ void Render(App* app)
         glDepthMask(true);
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+    
+    /*glBindVertexArray(app->vao);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindTexture(GL_TEXTURE_2D, app->albedoTextureAttachment);    
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+    glBindVertexArray(0);*/
 
     switch (app->mode)
     {
