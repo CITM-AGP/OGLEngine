@@ -393,6 +393,22 @@ void Init(App* app)
     ent4.worldMatrix = glm::scale(ent4.worldMatrix, vec3(50.0, 50.0, 50.0));
     app->entities.push_back(ent4);
 
+    vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);
+    vec3 lightPos2 = vec3(6.0, 1.0, 0.0);
+    vec3 lightPos3 = vec3(0.0, 1.0, 7.0);
+
+    Entity entlight1 = Entity(glm::mat4(1.0), app->sphere, 0, 0);
+    entlight1.worldMatrix = glm::translate(entlight1.worldMatrix, lightPos1);
+    app->entities.push_back(entlight1);
+
+    Entity entlight2 = Entity(glm::mat4(1.0), app->sphere, 0, 0);
+    entlight2.worldMatrix = glm::translate(entlight2.worldMatrix, lightPos2);
+    app->entities.push_back(entlight2);
+
+    Entity entlight3 = Entity(glm::mat4(1.0), app->sphere, 0, 0);
+    entlight3.worldMatrix = glm::translate(entlight3.worldMatrix, lightPos3);
+    app->entities.push_back(entlight3);
+
     // --- Create lights
     Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 0.5, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 5.0, 0.0)); 
     app->lights.push_back(light0);
@@ -400,13 +416,13 @@ void Init(App* app)
     Light light02 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0));
     app->lights.push_back(light02);
 
-    Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(1.0, 1.0, 1.0), vec3(-1.0, 1.0, 0.0));
+    Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(1.0, 1.0, 1.0), lightPos1);
     app->lights.push_back(light1);
 
-    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 0.0), vec3(-1.0, 1.0, 0.0), vec3(3.0, 1.0, 0.0));
+    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 0.0), vec3(-1.0, 1.0, 0.0), lightPos2);
     app->lights.push_back(light2);
 
-    Light light3 = Light(LightType::LightType_Point, vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0), vec3(-1.0, 1.0, -3.0));
+    Light light3 = Light(LightType::LightType_Point, vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0), lightPos3);
     app->lights.push_back(light3);
 
     // --- Camera ---
