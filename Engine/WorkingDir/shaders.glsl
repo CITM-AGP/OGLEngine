@@ -380,7 +380,7 @@ void main()
     vec3 ambientColor = albedo.xyz * ambientIntensity;
 
     vec3 N = normalize(Normal); // normal
-	vec3 V = normalize(-viewDir.xyz); // direction from pixel to camera
+	//vec3 V = normalize(-viewDir.xyz); // direction from pixel to camera
 
 	vec3 diffuseColor;
 	vec3 specularColor;
@@ -388,25 +388,27 @@ void main()
 	for(int i = 0; i < uLightCount; ++i)
 	{
 	    float attenuation = 1.0f;
-		
+		vec3 L;
 		// --- If we have a point light, attenuate according to distance ---
 		if(uLight[i].type == 1)
 		{
 			float dist = length(uLight[i].position - vposition);
-			float linear = 10.0;
-			float quadratic = 0.8;
-			attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist);
+			float linear = 0.05;
+			float quadratic = 0.01;
+			attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist );
+			L = normalize(uLight[i].position - vposition); // Light direction 
 		}
-	        
-	    vec3 L = normalize(uLight[i].direction - viewDir.xyz); // Light direction 
+	    else    
+			L = normalize(uLight[i].direction); // Light direction 
+
 	    vec3 R = reflect(-L, N); // reflected vector
 	    
 	    // Diffuse
-	    float diffuseIntensity = max(0.0, dot(N, L));
+	    float diffuseIntensity = max(dot(N, L), 0.0);
 	    diffuseColor += attenuation * albedo.xyz * uLight[i].color * diffuseIntensity;
 	    
 	    // Specular
-	    float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
+	    float specularIntensity = pow(max(dot(viewDir, R), 0.0), shininess);
 	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
 	}
 	
