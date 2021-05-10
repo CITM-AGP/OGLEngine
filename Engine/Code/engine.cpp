@@ -394,14 +394,20 @@ void Init(App* app)
     app->entities.push_back(ent4);
 
     // --- Create lights
-    Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0)); 
+    Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 0.5, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 5.0, 0.0)); 
     app->lights.push_back(light0);
 
-    Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(50.0, 0.0, 0.0), vec3(-1.0, 1.0, 0.0));
+    Light light02 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0));
+    app->lights.push_back(light02);
+
+    Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(1.0, 1.0, 1.0), vec3(-1.0, 1.0, 0.0));
     app->lights.push_back(light1);
 
-    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 1.0), vec3(-50.0, 0.0, 0.0), vec3(1.0, 1.0, 0.0));
+    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 0.0), vec3(-1.0, 1.0, 0.0), vec3(3.0, 1.0, 0.0));
     app->lights.push_back(light2);
+
+    Light light3 = Light(LightType::LightType_Point, vec3(0.0, 1.0, 0.0), vec3(1.0, 1.0, 0.0), vec3(-1.0, 1.0, -3.0));
+    app->lights.push_back(light3);
 
     // --- Camera ---
     app->cameraReference = vec3(0.0f);
