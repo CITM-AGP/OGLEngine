@@ -162,6 +162,8 @@ struct App
     u32 magentaTexIdx;
 
     u32 model;
+    u32 sphere;
+    u32 plane;
     //u32 texturedMeshProgram_uTexture;
 
     // Mode

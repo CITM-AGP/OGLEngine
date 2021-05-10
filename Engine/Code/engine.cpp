@@ -372,6 +372,8 @@ void Init(App* app)
 
     app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "SHOW_TEXTURED_MESH");  
     app->model = LoadModel(app, "Patrick/Patrick.obj");
+    app->sphere = LoadModel(app, "models/Sphere.fbx");
+    app->plane = LoadModel(app, "models/Plane.fbx");
 
     // --- Create entities ---
     Entity ent = Entity(glm::mat4(1.0), app->model, 0, 0);
@@ -385,6 +387,11 @@ void Init(App* app)
     Entity ent3 = Entity(glm::mat4(1.0), app->model, 0, 0);
     ent3.worldMatrix = glm::translate(ent3.worldMatrix, vec3(2.0, 2.0, -2.0));
     app->entities.push_back(ent3);
+
+    Entity ent4 = Entity(glm::mat4(1.0), app->plane, 0, 0);
+    ent4.worldMatrix = glm::translate(ent4.worldMatrix, vec3(0.0, -2.5, 0.0));
+    ent4.worldMatrix = glm::scale(ent4.worldMatrix, vec3(50.0, 50.0, 50.0));
+    app->entities.push_back(ent4);
 
     // --- Create lights
     Light light0 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0), vec3(0.0, 5.0, 0.0)); 
@@ -692,7 +699,13 @@ void Render(App* app)
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-            //glUniform1i(app->texturedMeshProgram_uTexture, 0);
+
+            if(ent.modelIndex > 0)
+                glUniform1i(glGetUniformLocation(deferredGeometry.handle, "noTexture"), 1);
+            else
+                glUniform1i(glGetUniformLocation(deferredGeometry.handle, "noTexture"), 0);
+
+            glUniform1i(glGetUniformLocation(deferredGeometry.handle, "uTexture"), 0);
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

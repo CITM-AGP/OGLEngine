@@ -253,6 +253,7 @@ in vec3 vNormal; // in worldspace
 in vec3 uViewDir; // in worldspace
 
 uniform sampler2D uTexture;
+uniform int noTexture;
 
 layout(binding = 0, std140) uniform GlobalParams
 {
@@ -280,6 +281,9 @@ void main()
 {
     oNormals = vec4(normalize(vNormal), 1.0); 
 	oAlbedo = texture(uTexture, vTexCoord);
+
+	if(noTexture == 1.0)
+		oAlbedo = vec4(0.5);
 
 	float depth = LinearizeDepth(gl_FragCoord.z) / far; // divide by far for demonstration
 	oDepth = vec4(vec3(depth), 1.0);
