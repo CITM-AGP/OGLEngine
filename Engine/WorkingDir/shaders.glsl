@@ -391,7 +391,12 @@ void main()
 		
 		// --- If we have a point light, attenuate according to distance ---
 		if(uLight[i].type == 1)
-			attenuation = 1.0 / length(uLight[i].position - vposition);
+		{
+			float dist = length(uLight[i].position - vposition);
+			float linear = 10.0;
+			float quadratic = 0.8;
+			attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist);
+		}
 	        
 	    vec3 L = normalize(uLight[i].direction - viewDir.xyz); // Light direction 
 	    vec3 R = reflect(-L, N); // reflected vector
