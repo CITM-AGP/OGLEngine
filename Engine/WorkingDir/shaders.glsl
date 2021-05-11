@@ -332,7 +332,7 @@ out vec3 ViewPos; // in worldspace
 void main()
 {
 	vTexCoord = aTexCoord;
-	ViewPos = uCameraPosition;
+	ViewPos = vec3(uWorldViewProjectionMatrix * vec4(uCameraPosition, 1.0));
 	gl_Position =  vec4(aPosition, 1.0);
 }
 
@@ -370,7 +370,8 @@ void main()
 	vec3 Normal = texture(oNormals, vTexCoord).rgb;
 	vec3 albedo = texture(oAlbedo, vTexCoord).rgb;
 	vec3 viewDir = normalize(ViewPos - vposition);
-
+	float Specular = texture(oAlbedo, vTexCoord).a;
+	Specular = 1.0;
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
     float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
@@ -405,16 +406,25 @@ void main()
 	    
 	    // Diffuse
 	    float diffuseIntensity = max(dot(N, L), 0.0);
-	    diffuseColor += attenuation * albedo.xyz * uLight[i].color * diffuseIntensity;
+	    diffuseColor += albedo.xyz * uLight[i].color * diffuseIntensity;
 	    
 	    // Specular
-	    float specularIntensity = pow(max(dot(viewDir, R), 0.0), shininess);
+//		vec3 halfwayDir = normalize(L + viewDir);
+//		float spec = pow(max(dot(N, halfwayDir), 0.0), shininess);
+//		specularColor += uLight[i].color * spec * Specular;
+
+		float specularIntensity = pow(max(dot(viewDir, R), 0.0), shininess);
 	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
+
+		diffuseColor*=attenuation;
+		specularColor*=attenuation;
+
 	}
 	
 	// Final outputs
     //oColor = vec4(Normal, 1.0);
     oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
+	//oColor = vec4(ViewPos, 1.0);
 
 }
 
