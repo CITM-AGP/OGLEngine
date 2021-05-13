@@ -471,9 +471,9 @@ void Gui(App* app)
         ImGui::EndMenu();
     }
 
-    if (ImGui::BeginMenu("App info"))
+    if (ImGui::BeginMenu("Debug"))
     {
-        if (ImGui::MenuItem("Info window"))
+        if (ImGui::MenuItem("Debug window"))
             app->showInfo = !app->showInfo;
 
         ImGui::EndMenu();
@@ -483,8 +483,41 @@ void Gui(App* app)
 
     if (app->showInfo)
     {
-    bool test = false;
-        ImGui::Begin("Info", &app->showInfo);
+        ImGui::Begin("Debug window", &app->showInfo);
+        static vec3 entity1 = vec3(-5.0f, 1.0f, 5.0f);
+        static vec3 entity2 = vec3(2.5f, 1.0f, 2.0f);
+        static vec3 entity3 = vec3(2.0f, 2.0f, -2.0f);
+
+        ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "Entity positions [X / Y / Z]");
+        ImGui::NewLine();
+
+        ImGui::Text("Entity 1");
+        if (ImGui::DragFloat3("##e", (float*)&entity1, 0.1f))
+        {
+            app->entities[0] = Entity(glm::mat4(1.0), app->model, 0, 0);
+            app->entities[0].worldMatrix = glm::translate(app->entities[0].worldMatrix, vec3(entity1.x, entity1.y, entity1.z));
+        }
+
+        ImGui::Text("Entity 2");
+        if (ImGui::DragFloat3("##e2", (float*)&entity2, 0.1f))
+        {
+            app->entities[1] = Entity(glm::mat4(1.0), app->model, 0, 0);
+            app->entities[1].worldMatrix = glm::translate(app->entities[1].worldMatrix, vec3(entity2.x, entity2.y, entity2.z));
+        }
+
+        ImGui::Text("Entity 3");
+        if (ImGui::DragFloat3("##e3", (float*)&entity3, 0.1f))
+        {
+            app->entities[2] = Entity(glm::mat4(1.0), app->model, 0, 0);
+            app->entities[2].worldMatrix = glm::translate(app->entities[2].worldMatrix, vec3(entity3.x, entity3.y, entity3.z));
+        }
+
+        ImGui::NewLine();
+        ImGui::Separator();
+        ImGui::NewLine();
+
+        ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "Info");
+        ImGui::NewLine();
         ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
 
         // --- Open GL info ---
@@ -493,8 +526,12 @@ void Gui(App* app)
         ImGui::Text("GPU vendor: %s", app->glInfo.vendor.c_str());
         ImGui::Text("GLSL version: %s", app->glInfo.shadingLanguageVersion.c_str());
 
-        for (int i = 0; i < app->glInfo.extensions.size(); ++i)
-            ImGui::Text("Extension %i: %s", i, app->glInfo.extensions[i].c_str());
+        ImGui::NewLine();
+        if (ImGui::CollapsingHeader("Extensions"))
+        {
+            for (int i = 0; i < app->glInfo.extensions.size(); ++i)
+                ImGui::Text("Extension %i: %s", i, app->glInfo.extensions[i].c_str());
+        }
 
         ImGui::End();
     }
