@@ -227,12 +227,6 @@ void main()
 	vNormal = vec3(uWorldMatrix * vec4(aNormal, 0.0));
 	vViewDir = uCameraPosition - vPosition;
 	gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);
-
-	//float clippingScale = 5.0;
-
-	//gl_Position = vec4(aPosition, clippingScale);
-
-	//gl_Position.z = -gl_Position.z;
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
@@ -370,8 +364,7 @@ void main()
 	vec3 Normal = texture(oNormals, vTexCoord).rgb;
 	vec3 albedo = texture(oAlbedo, vTexCoord).rgb;
 	vec3 viewDir = normalize(ViewPos - vposition);
-	float Specular = texture(oAlbedo, vTexCoord).a;
-	Specular = 1.0;
+
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
     float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
@@ -381,7 +374,6 @@ void main()
     vec3 ambientColor = albedo.xyz * ambientIntensity;
 
     vec3 N = normalize(Normal); // normal
-	//vec3 V = normalize(-viewDir.xyz); // direction from pixel to camera
 
 	vec3 diffuseColor;
 	vec3 specularColor;
@@ -396,7 +388,7 @@ void main()
 			float dist = length(uLight[i].position - vposition);
 			float linear = 0.05;
 			float quadratic = 0.01;
-			attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist );
+			attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist);
 			L = normalize(uLight[i].position - vposition); // Light direction 
 		}
 	    else    
@@ -409,10 +401,6 @@ void main()
 	    diffuseColor += albedo.xyz * uLight[i].color * diffuseIntensity;
 	    
 	    // Specular
-//		vec3 halfwayDir = normalize(L + viewDir);
-//		float spec = pow(max(dot(N, halfwayDir), 0.0), shininess);
-//		specularColor += uLight[i].color * spec * Specular;
-
 		float specularIntensity = pow(max(dot(viewDir, R), 0.0), shininess);
 	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
 
@@ -422,10 +410,7 @@ void main()
 	}
 	
 	// Final outputs
-    //oColor = vec4(Normal, 1.0);
     oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
-	//oColor = vec4(ViewPos, 1.0);
-
 }
 
 #endif

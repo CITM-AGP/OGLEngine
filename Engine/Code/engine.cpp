@@ -390,7 +390,7 @@ void Init(App* app)
 
     Entity ent4 = Entity(glm::mat4(1.0), app->plane, 0, 0);
     ent4.worldMatrix = glm::translate(ent4.worldMatrix, vec3(0.0, -2.5, 0.0));
-    ent4.worldMatrix = glm::scale(ent4.worldMatrix, vec3(50.0, 50.0, 50.0));
+    //ent4.worldMatrix = glm::scale(ent4.worldMatrix, vec3(50.0, 50.0, 50.0));
     app->entities.push_back(ent4);
 
     vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);
@@ -730,6 +730,8 @@ void Render(App* app)
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
     // --- Draw entities --
+
+    // forward shading
    /* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     glUseProgram(texturedMeshProgram.handle);*/
 
