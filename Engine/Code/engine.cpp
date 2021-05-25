@@ -587,6 +587,12 @@ void Gui(App* app)
         static vec3 entity2 = vec3(2.5f, 1.0f, 2.0f);
         static vec3 entity3 = vec3(2.0f, 2.0f, -2.0f);
 
+        ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "BLOOM");
+        ImGui::NewLine();
+
+        ImGui::Checkbox("renderBloom", &app->renderBloom);
+        ImGui::NewLine();
+
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "Entity positions [X / Y / Z]");
         ImGui::NewLine();
 
