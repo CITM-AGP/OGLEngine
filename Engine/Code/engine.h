@@ -138,6 +138,19 @@ struct App
     u32 texturedMeshProgramIdx;
     u32 deferredGeometryProgramIdx;
     u32 deferredLightingProgramIdx;
+    u32 blitBrightestPixelsProgram;
+    u32 blur;
+    u32 bloomProgram;
+
+    // bloom
+    GLuint rtBright; // for blitting brightest pixels and vertical blur
+    GLuint rtBloomH; // For first pass horizontal blur
+    GLuint fboBloom1;
+    GLuint fboBloom2;
+    GLuint fboBloom3;
+    GLuint fboBloom4;
+    GLuint fboBloom5;
+
 
     // lights
     u32 globalParamsOffset;
