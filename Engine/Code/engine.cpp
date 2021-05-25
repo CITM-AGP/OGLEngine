@@ -370,6 +370,9 @@ void Init(App* app)
 
     app->deferredGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "GEOMETRY_PASS");
     app->deferredLightingProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHTING_PASS");
+    app->blitBrightestPixelsProgram = LoadProgram(app, "shaders.glsl", "BLOOM_BRIGHTEST");
+    app->blur = LoadProgram(app, "shaders.glsl", "BLOOM_BLUR");
+    app->bloomProgram = LoadProgram(app, "shaders.glsl", "BLOOM");
 
     // --- Textures ---
     app->diceTexIdx = LoadTexture2D(app, "dice.png");
@@ -560,6 +563,9 @@ void Gui(App* app)
 
         if (ImGui::MenuItem("Position"))
             app->mode = Mode::Mode_Position;
+
+        if (ImGui::MenuItem("BloomBrightest"))
+            app->mode = Mode::Mode_Bloom_Brightest;
 
         ImGui::EndMenu();
     }
@@ -799,6 +805,120 @@ void renderQuad(App* app)
     glBindVertexArray(0);
 }
 
+void passBloom(App* app, GLuint fbo, GLenum colorAttachment, GLuint inputTexture, int maxLod)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glDrawBuffer(colorAttachment);
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    Program& program = app->programs[app->bloomProgram];
+    glUseProgram(program.handle);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, inputTexture);
+    glUniform1i(glGetUniformLocation(program.handle, "colorMap"), 0);
+    glUniform1i(glGetUniformLocation(program.handle, "maxLod"), maxLod);
+
+    renderQuad(app);
+
+    glUseProgram(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void passBlur(App* app, GLuint pfbo, const glm::uvec2& viewportSize, GLenum colorAttachment, GLuint inputTexture, GLint inputLod, const glm::uvec2& direction)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, pfbo);
+    glDrawBuffer(colorAttachment);
+    glViewport(0, 0, viewportSize.x, viewportSize.y);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+
+    Program& program = app->programs[app->blur];
+    glUseProgram(program.handle);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, inputTexture);
+    glUniform1i(glGetUniformLocation(program.handle, "colorMap"), 0);
+    glUniform1i(glGetUniformLocation(program.handle, "inputLod"), inputLod);
+    glUniform2f(glGetUniformLocation(program.handle, "direction"), direction.x, direction.y);
+
+    renderQuad(app);
+
+    glUseProgram(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_BLEND);
+}
+
+void passBlitBrightPixels(App* app, GLuint fbo, const glm::uvec2& viewportSize, GLenum colorAttachment, GLuint inputTexture)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glDrawBuffer(colorAttachment);
+    glViewport(0, 0, viewportSize.x, viewportSize.y);
+
+    Program& program = app->programs[app->blitBrightestPixelsProgram];
+    glUseProgram(program.handle);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, inputTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glUniform1i(glGetUniformLocation(program.handle, "colorTexture"), 0);
+
+    renderQuad(app);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glUseProgram(0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderBloom(App* app)
+{
+#define LOD(x) x
+
+    const glm::uvec2 horizontal(1.0, 0.0);
+    const glm::uvec2 vertical(0.0, 1.0);
+
+    const float w = app->displaySize.x;
+    const float h = app->displaySize.y;
+
+    // horizontal blur
+    //float threshold = 1.0;
+    passBlitBrightPixels(app, app->fboBloom1, glm::uvec2(w / 2, h / 2), GL_COLOR_ATTACHMENT0, app->modelTextureAttachment);
+    glBindTexture(GL_TEXTURE_2D, app->rtBright);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    //// horizontal blur
+    //passBlur(app, app->fboBloom1, glm::uvec2(w / 2, h / 2), GL_COLOR_ATTACHMENT1, app->rtBright, LOD(0), horizontal);
+    //passBlur(app, app->fboBloom2, glm::uvec2(w / 4, h / 4), GL_COLOR_ATTACHMENT1, app->rtBright, LOD(1), horizontal);
+    //passBlur(app, app->fboBloom3, glm::uvec2(w / 8, h / 8), GL_COLOR_ATTACHMENT1, app->rtBright, LOD(2), horizontal);
+    //passBlur(app, app->fboBloom4, glm::uvec2(w / 16, h / 16), GL_COLOR_ATTACHMENT1, app->rtBright, LOD(3), horizontal);
+    //passBlur(app, app->fboBloom5, glm::uvec2(w / 32, h / 32), GL_COLOR_ATTACHMENT1, app->rtBright, LOD(4), horizontal);
+
+    //// vertical blur
+    //passBlur(app, app->fboBloom1, glm::uvec2(w / 2, h / 2), GL_COLOR_ATTACHMENT0, app->rtBloomH, LOD(0), vertical);
+    //passBlur(app, app->fboBloom2, glm::uvec2(w / 4, h / 4), GL_COLOR_ATTACHMENT0, app->rtBloomH, LOD(1), vertical);
+    //passBlur(app, app->fboBloom3, glm::uvec2(w / 8, h / 8), GL_COLOR_ATTACHMENT0, app->rtBloomH, LOD(2), vertical);
+    //passBlur(app, app->fboBloom4, glm::uvec2(w / 16, h / 16), GL_COLOR_ATTACHMENT0, app->rtBloomH, LOD(3), vertical);
+    //passBlur(app, app->fboBloom5, glm::uvec2(w / 32, h / 32), GL_COLOR_ATTACHMENT0, app->rtBloomH, LOD(4), vertical);
+
+    //passBloom(app, app->framebufferHandle, GL_COLOR_ATTACHMENT0, app->rtBright, 4);
+
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+#undef LOD
+}
+
 void Render(App* app)
 {
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "Render");
@@ -897,6 +1017,11 @@ void Render(App* app)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 
+    if (app->renderBloom)
+    {
+        RenderBloom(app);
+    }
+
     // --- Draw framebuffer texture ---
     Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
     glUseProgram(programTexturedGeometry.handle);
@@ -928,6 +1053,10 @@ void Render(App* app)
 
         case Mode::Mode_Position:
             glBindTexture(GL_TEXTURE_2D, app->positionTextureAttachment);
+            break;
+
+        case Mode::Mode_Bloom_Brightest:
+            glBindTexture(GL_TEXTURE_2D, app->rtBright);
             break;
     }
     

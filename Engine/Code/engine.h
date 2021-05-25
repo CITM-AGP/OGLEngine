@@ -98,7 +98,8 @@ enum class Mode
     Mode_Depth,
     Mode_Normals,
     Mode_Albedo,
-    Mode_Position
+    Mode_Position,
+    Mode_Bloom_Brightest
 };
 
 struct App
@@ -143,6 +144,7 @@ struct App
     u32 bloomProgram;
 
     // bloom
+    bool renderBloom = true;
     GLuint rtBright; // for blitting brightest pixels and vertical blur
     GLuint rtBloomH; // For first pass horizontal blur
     GLuint fboBloom1;

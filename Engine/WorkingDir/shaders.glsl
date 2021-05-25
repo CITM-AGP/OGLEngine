@@ -416,6 +416,136 @@ void main()
 #endif
 #endif
 
+#ifdef BLOOM_BRIGHTEST
+
+#if defined(VERTEX) ///////////////////////////////////////////////////
+
+// TODO: Write your vertex shader here
+
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec2 aTexCoord;
+
+out vec2 vTexCoord;
+
+void main()
+{
+	vTexCoord = aTexCoord;
+	gl_Position =  vec4(aPosition, 1.0);
+}
+
+#elif defined(FRAGMENT) ///////////////////////////////////////////////
+
+uniform sampler2D colorTexture;
+in vec2 vTexCoord;
+out vec4 outColor;
+
+void main()
+{
+    vec4 color = texture(colorTexture, vTexCoord);
+	float intensity = dot(color.rgb, vec3(0.21, 0.71, 0.08));
+	float threshhold = 0.5;
+	float threshhold1 = threshhold;
+	float threshhold2 = threshhold + 0.1;
+	outColor = color * smoothstep(threshhold1, threshhold2, intensity);
+}
+
+#endif
+#endif
+
+#ifdef BLOOM_BLUR
+
+#if defined(VERTEX) ///////////////////////////////////////////////////
+
+// TODO: Write your vertex shader here
+
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec2 aTexCoord;
+
+out vec2 vTexCoord;
+
+void main()
+{
+	vTexCoord = aTexCoord;
+	gl_Position =  vec4(aPosition, 1.0);
+}
+
+#elif defined(FRAGMENT) ///////////////////////////////////////////////
+
+uniform sampler2D colorMap;
+uniform vec2 direction;
+uniform int inputLod;
+
+in vec2 vTexCoord;
+out vec4 outColor;
+
+void main()
+{
+    vec2 texSize = textureSize(colorMap, inputLod);
+	vec2 texelSize = 1.0/texSize;
+	vec2 margin1 = texelSize * 0.5;
+	vec2 margin2 = vec2(1.0) - margin1;
+
+	outColor = vec4(0.0);
+
+	vec2 directionFragCoord = gl_FragCoord.xy * direction;
+	int coord = int(directionFragCoord.x + directionFragCoord.y);
+	vec2 directionTexSize = texSize * direction;
+	int size = int(directionTexSize.x + directionTexSize.y);
+	int kernelRadius = 24;
+	int kernelBegin = -min(kernelRadius, coord);
+	int kernelEnd = min(kernelRadius, size - coord);
+	float weight = 0.0;
+
+	for(int i = kernelBegin; i <= kernelEnd; ++i)
+	{
+		float currentWeight = smoothstep(float(kernelRadius), 0.0, float(abs(i)));
+		vec2 finalTexCoords = vTexCoord + i * direction * texelSize;
+	    finalTexCoords = clamp(finalTexCoords, margin1, margin2);
+		outColor += textureLod(colorMap, finalTexCoords, inputLod) * currentWeight;
+		weight += currentWeight;		
+	}
+}
+
+#endif
+#endif
+
+#ifdef BLOOM
+
+#if defined(VERTEX) ///////////////////////////////////////////////////
+
+// TODO: Write your vertex shader here
+
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec2 aTexCoord;
+
+out vec2 vTexCoord;
+
+void main()
+{
+	vTexCoord = aTexCoord;
+	gl_Position =  vec4(aPosition, 1.0);
+}
+
+#elif defined(FRAGMENT) ///////////////////////////////////////////////
+
+uniform sampler2D colorMap;
+uniform int maxLod;
+in vec2 vTexCoord;
+out vec4 outColor;
+
+void main()
+{  
+	outColor = vec4(0.0);
+	for(int lod =0; lod < maxLod; ++lod)
+	{
+		outColor += textureLod(colorMap, vTexCoord, float(lod));
+	}
+	outColor.a = 1.0;
+}
+
+#endif
+#endif
+
 
 // NOTE: You can write several shaders in the same file if you want as
 // long as you embrace them within an #ifdef block (as you can see above).
