@@ -142,6 +142,14 @@ struct App
     u32 blitBrightestPixelsProgram;
     u32 blur;
     u32 bloomProgram;
+    int kernelRadius = 24;
+    int lodIntensity0 = 1;
+    int lodIntensity1 = 1;
+    int lodIntensity2 = 1;
+    int lodIntensity3 = 1;
+    int lodIntensity4 = 1;
+
+
 
     // bloom
     bool renderBloom = true;

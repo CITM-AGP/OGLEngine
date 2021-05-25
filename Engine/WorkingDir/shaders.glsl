@@ -443,10 +443,10 @@ void main()
 {
     vec4 color = texture(colorTexture, vTexCoord);
 	float intensity = dot(color.rgb, vec3(0.21, 0.71, 0.08));
-	float threshhold = 0.5;
-	float threshhold1 = threshhold;
-	float threshhold2 = threshhold + 0.1;
-	outColor = color * smoothstep(threshhold1, threshhold2, intensity);
+	float threshold = 0.6;
+	float threshold1 = threshold;
+	float threshold2 = threshold + 0.1;
+	outColor = color * smoothstep(threshold1, threshold2, intensity);
 }
 
 #endif
@@ -474,6 +474,7 @@ void main()
 uniform sampler2D colorMap;
 uniform vec2 direction;
 uniform int inputLod;
+uniform int kernelRadius;
 
 in vec2 vTexCoord;
 out vec4 outColor;
@@ -491,7 +492,7 @@ void main()
 	int coord = int(directionFragCoord.x + directionFragCoord.y);
 	vec2 directionTexSize = texSize * direction;
 	int size = int(directionTexSize.x + directionTexSize.y);
-	int kernelRadius = 24;
+	//int kernelRadius = 24;
 	int kernelBegin = -min(kernelRadius, coord);
 	int kernelEnd = min(kernelRadius, size - coord);
 	float weight = 0.0;

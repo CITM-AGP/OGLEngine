@@ -587,10 +587,27 @@ void Gui(App* app)
         static vec3 entity2 = vec3(2.5f, 1.0f, 2.0f);
         static vec3 entity3 = vec3(2.0f, 2.0f, -2.0f);
 
+
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "BLOOM");
         ImGui::NewLine();
 
         ImGui::Checkbox("renderBloom", &app->renderBloom);
+        ImGui::NewLine();
+
+        ImGui::InputInt("Kernel Radius", &app->kernelRadius);
+        ImGui::NewLine();
+        ImGui::InputInt("LOD 0 Intensity", &app->lodIntensity0);
+        ImGui::NewLine();
+        ImGui::InputInt("LOD 1 Intensity", &app->lodIntensity1);
+        ImGui::NewLine();
+        ImGui::InputInt("LOD 2 Intensity", &app->lodIntensity2);
+        ImGui::NewLine();
+        ImGui::InputInt("LOD 3 Intensity", &app->lodIntensity3);
+        ImGui::NewLine();
+        ImGui::InputInt("LOD 4 Intensity", &app->lodIntensity4);        
+        ImGui::NewLine();
+
+
         ImGui::NewLine();
 
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "Entity positions [X / Y / Z]");
@@ -854,6 +871,7 @@ void passBlur(App* app, GLuint pfbo, const glm::uvec2& viewportSize, GLenum colo
     glBindTexture(GL_TEXTURE_2D, inputTexture);
     glUniform1i(glGetUniformLocation(program.handle, "colorMap"), 0);
     glUniform1i(glGetUniformLocation(program.handle, "inputLod"), inputLod);
+    glUniform1i(glGetUniformLocation(program.handle, "kernelRadius"), app->kernelRadius);
     glUniform2i(glGetUniformLocation(program.handle, "direction"), direction.x, direction.y);
 
     renderQuad(app);
