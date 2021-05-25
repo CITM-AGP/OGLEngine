@@ -5,6 +5,9 @@
 // graphics related GUI options, and so on.
 //
 
+#define MIPMAP_BASE_LEVEL 0
+#define MIPMAP_MAX_LEVEL 0
+
 #include "engine.h"
 #include <imgui.h>
 #include <stb_image.h>
@@ -443,6 +446,55 @@ void Init(App* app)
         0.1f,                       // Near clipping plane. Keep as big as possible, or you'll get precision issues.
         100.0f                      // Far clipping plane. Keep as little as possible.
     );
+
+    // --- BLOOM ---
+
+    // Bloom mipmap
+
+    if (app->rtBright != 0) 
+        glDeleteTextures(1, &app->rtBright);
+
+    glGenTextures(1, &app->rtBright);
+    glBindTexture(GL_TEXTURE_2D, app->rtBright);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, MIPMAP_BASE_LEVEL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MIPMAP_MAX_LEVEL);
+
+    int w = app->displaySize.x;
+    int h = app->displaySize.y;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w / 2, h / 2, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, w / 4, h / 4, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA16F, w / 8, h / 8, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 3, GL_RGBA16F, w / 16, h / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 4, GL_RGBA16F, w / 32, h / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // Bloom mipmap
+    if (app->rtBloomH != 0)
+        glDeleteTextures(1, &app->rtBloomH);
+
+    glGenTextures(1, &app->rtBloomH);
+    glBindTexture(GL_TEXTURE_2D, app->rtBloomH);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, MIPMAP_BASE_LEVEL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MIPMAP_MAX_LEVEL);
+
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w / 2, h / 2, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, w / 4, h / 4, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA16F, w / 8, h / 8, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 3, GL_RGBA16F, w / 16, h / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 4, GL_RGBA16F, w / 32, h / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     // --- Mode ---
     app->mode = Mode::Mode_Model;
