@@ -257,6 +257,26 @@ void GenerateFramebufferTexture(GLuint& textureHandle, ivec2 displaySize, GLint 
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void CheckFBOStatus()
+{
+    GLenum frameBufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (frameBufferStatus != GL_FRAMEBUFFER_COMPLETE)
+    {
+        switch (frameBufferStatus)
+        {
+        case GL_FRAMEBUFFER_UNDEFINED:                      ELOG("GL_FRAMEBUFFER_UNDEFINED"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:          ELOG("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:  ELOG("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:         ELOG("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:         ELOG("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"); break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:                    ELOG("GL_FRAMEBUFFER_UNSUPPORTED"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:         ELOG("GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"); break;
+        case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:       ELOG("GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"); break;
+        default: ELOG("Unknown framebuffer status error");
+        }
+    }
+}
+
 void Init(App* app)
 {
     // TODO: Initialize your resources here!
@@ -300,22 +320,7 @@ void Init(App* app)
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, app->positionTextureAttachment, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, app->depthAttachmentHandle, 0);
 
-    GLenum frameBufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (frameBufferStatus != GL_FRAMEBUFFER_COMPLETE)
-    {
-        switch (frameBufferStatus)
-        {
-            case GL_FRAMEBUFFER_UNDEFINED:                      ELOG("GL_FRAMEBUFFER_UNDEFINED"); break;
-            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:          ELOG("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"); break;
-            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:  ELOG("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"); break;
-            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:         ELOG("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"); break;
-            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:         ELOG("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"); break;
-            case GL_FRAMEBUFFER_UNSUPPORTED:                    ELOG("GL_FRAMEBUFFER_UNSUPPORTED"); break;
-            case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:         ELOG("GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"); break;
-            case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:       ELOG("GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"); break;
-            default: ELOG("Unknown framebuffer status error");
-        }
-    }
+    CheckFBOStatus();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // --- Uniform buffers ---
@@ -495,6 +500,42 @@ void Init(App* app)
     glTexImage2D(GL_TEXTURE_2D, 3, GL_RGBA16F, w / 16, h / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexImage2D(GL_TEXTURE_2D, 4, GL_RGBA16F, w / 32, h / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
     glGenerateMipmap(GL_TEXTURE_2D);
+
+    // Bloom fbos 
+    glGenFramebuffers(1, &app->fboBloom1);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom1);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, app->rtBright, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, app->rtBloomH, 0);
+    CheckFBOStatus();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenFramebuffers(1, &app->fboBloom2);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom2);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, app->rtBright, 1);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, app->rtBloomH, 1);
+    CheckFBOStatus();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenFramebuffers(1, &app->fboBloom3);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom3);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, app->rtBright, 2);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, app->rtBloomH, 2);
+    CheckFBOStatus();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenFramebuffers(1, &app->fboBloom4);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom4);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, app->rtBright, 3);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, app->rtBloomH, 3);
+    CheckFBOStatus();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenFramebuffers(1, &app->fboBloom5);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom5);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, app->rtBright, 4);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, app->rtBloomH, 4);
+    CheckFBOStatus();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // --- Mode ---
     app->mode = Mode::Mode_Model;
