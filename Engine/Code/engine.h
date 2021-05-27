@@ -99,7 +99,8 @@ enum class Mode
     Mode_Normals,
     Mode_Albedo,
     Mode_Position,
-    Mode_Bloom_Brightest
+    Mode_Bloom_Brightest,
+    Mode_Bloom_Blur
 };
 
 struct App

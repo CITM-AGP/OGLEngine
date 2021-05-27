@@ -505,6 +505,8 @@ void main()
 		outColor += textureLod(colorMap, finalTexCoords, inputLod) * currentWeight;
 		weight += currentWeight;		
 	}
+
+	outColor = outColor / weight;
 }
 
 #endif
@@ -531,15 +533,31 @@ void main()
 
 uniform sampler2D colorMap;
 uniform int maxLod;
+uniform int lodI0;
+uniform int lodI1;
+uniform int lodI2;
+uniform int lodI3;
+uniform int lodI4;
+
+
 in vec2 vTexCoord;
 out vec4 outColor;
 
 void main()
 {  
 	outColor = vec4(0.0);
-	for(int lod =0; lod < maxLod; ++lod)
+	for(int lod = 0; lod < maxLod; ++lod)
 	{
-		outColor += textureLod(colorMap, vTexCoord, float(lod));
+		if(lod == 0)
+			outColor += textureLod(colorMap, vTexCoord, float(lod)) * lodI0;
+		else if (lod == 1)
+			outColor += textureLod(colorMap, vTexCoord, float(lod)) * lodI1;
+		else if (lod == 2)
+			outColor += textureLod(colorMap, vTexCoord, float(lod)) * lodI2;
+		else if (lod == 3)
+			outColor += textureLod(colorMap, vTexCoord, float(lod)) * lodI3;
+		else if (lod == 4)
+			outColor += textureLod(colorMap, vTexCoord, float(lod)) * lodI4;
 	}
 	outColor.a = 1.0;
 }
