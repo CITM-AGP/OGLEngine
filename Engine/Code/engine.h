@@ -161,7 +161,7 @@ struct App
     GLuint fboBloom3;
     GLuint fboBloom4;
     GLuint fboBloom5;
-
+    float bloomThreshold = 0.6;
 
     // lights
     u32 globalParamsOffset;

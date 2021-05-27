@@ -603,6 +603,8 @@ void Gui(App* app)
 
         ImGui::InputInt("Kernel Radius", &app->kernelRadius);
         ImGui::NewLine();
+        ImGui::InputFloat("Bloom Threshold", &app->bloomThreshold);
+        ImGui::NewLine();
         ImGui::InputInt("LOD 0 Intensity", &app->lodIntensity0);
         ImGui::NewLine();
         ImGui::InputInt("LOD 1 Intensity", &app->lodIntensity1);
@@ -908,6 +910,7 @@ void passBlitBrightPixels(App* app, GLuint fbo, const glm::uvec2& viewportSize, 
     glBindTexture(GL_TEXTURE_2D, inputTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glUniform1i(glGetUniformLocation(program.handle, "colorTexture"), 0);
+    glUniform1f(glGetUniformLocation(program.handle, "threshold"), app->bloomThreshold);
 
     renderQuad(app);
 
