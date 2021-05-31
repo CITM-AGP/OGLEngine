@@ -94,6 +94,7 @@ struct Entity
 enum class Mode
 {
     Mode_TexturedQuad,
+    Mode_ForwardRender,
     Mode_Model,
     Mode_Depth,
     Mode_Normals,

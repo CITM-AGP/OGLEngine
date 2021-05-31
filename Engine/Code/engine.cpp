@@ -427,13 +427,13 @@ void Init(App* app)
     Light light02 = Light(LightType::LightType_Directional, vec3(1.0, 1.0, 1.0), vec3(-1.0, 0.0, 1.0), vec3(0.0, 0.0, 0.0));
     app->lights.push_back(light02);
 
-    Light light1 = Light(LightType::LightType_Point, vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 0.0), lightPos1);
+    Light light1 = Light(LightType::LightType_Point, vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), lightPos1);
     app->lights.push_back(light1);
 
-    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), lightPos2);
+    Light light2 = Light(LightType::LightType_Point, vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), lightPos2);
     app->lights.push_back(light2);
 
-    Light light3 = Light(LightType::LightType_Point, vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 0.0), lightPos3);
+    Light light3 = Light(LightType::LightType_Point, vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), lightPos3);
     app->lights.push_back(light3);
 
     // --- Camera ---
@@ -553,6 +553,9 @@ void Gui(App* app)
     ImGui::BeginMainMenuBar();     
     if (ImGui::BeginMenu("Render mode"))
     {
+        if (ImGui::MenuItem("ForwardRender"))
+            app->mode = Mode::Mode_ForwardRender;
+
         if (ImGui::MenuItem("Model"))
             app->mode = Mode::Mode_Model;
 
@@ -1023,14 +1026,18 @@ void Render(App* app)
 
     // --- Draw entities --
 
-    // forward shading
    /* Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
     glUseProgram(texturedMeshProgram.handle);*/
 
     // Deferred geometry pass
 
-    Program& deferredGeometry = app->programs[app->deferredGeometryProgramIdx];
-    glUseProgram(deferredGeometry.handle);
+    Program& renderProgram = app->programs[app->deferredGeometryProgramIdx];
+
+    // forward shading
+    if (app->mode == Mode::Mode_ForwardRender)
+        renderProgram = app->programs[app->texturedMeshProgramIdx];
+
+    glUseProgram(renderProgram.handle);
 
     glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cbuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
@@ -1044,7 +1051,7 @@ void Render(App* app)
 
         for (u32 i = 0; i < mesh.submeshes.size(); ++i)
         {
-            GLuint vao = FindVAO(mesh, i, deferredGeometry);
+            GLuint vao = FindVAO(mesh, i, renderProgram);
             glBindVertexArray(vao);
 
             u32 submeshMaterialIdx = model.materialIdx[i];
@@ -1053,12 +1060,12 @@ void Render(App* app)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
 
-            if(ent.modelIndex > 0)
-                glUniform1i(glGetUniformLocation(deferredGeometry.handle, "noTexture"), 1);
-            else
-                glUniform1i(glGetUniformLocation(deferredGeometry.handle, "noTexture"), 0);
+            //if(ent.modelIndex > 0)
+            //    glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 0);
+            //else
+                glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 0);
 
-            glUniform1i(glGetUniformLocation(deferredGeometry.handle, "uTexture"), 0);
+            glUniform1i(glGetUniformLocation(renderProgram.handle, "uTexture"), 0);
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -1096,7 +1103,7 @@ void Render(App* app)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 
-    if (app->renderBloom)
+    if (app->renderBloom && app->mode != Mode::Mode_ForwardRender)
     {
         RenderBloom(app);
     }
@@ -1114,6 +1121,10 @@ void Render(App* app)
 
     switch (app->mode)
     {
+        case Mode::Mode_ForwardRender:
+            glBindTexture(GL_TEXTURE_2D, app->modelTextureAttachment);
+            break;
+
         case Mode::Mode_Model:
             glBindTexture(GL_TEXTURE_2D, app->modelTextureAttachment);
             break;

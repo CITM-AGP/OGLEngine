@@ -105,6 +105,7 @@ in vec3 vNormal; // in worldspace
 in vec3 uViewDir; // in worldspace
 
 uniform sampler2D uTexture;
+uniform int noTexture;
 
 layout(binding = 0, std140) uniform GlobalParams
 {
@@ -134,6 +135,9 @@ void main()
     vec3 specular = vec3(1.0); // color reflected by mat
     float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
 	vec4 albedo = texture(uTexture, vTexCoord);
+
+	if(noTexture == 1)
+		oAlbedo = vec4(0.5);
 
 	// Ambient
     float ambientIntensity = 0.4;
