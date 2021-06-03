@@ -675,27 +675,44 @@ void HandleUserInput(App* app)
 {
     vec3 newPos(0.0f);
     float speed = 10.0f * app->deltaTime; 
+
+    vec3 right_vector(1, 0, 0);
+    vec3 up_vector(0, 1, 0);
+    vec3 rotation_center(0, 0, -3.5);
     
     if (app->input.keys[K_LEFT_SHIFT] == BUTTON_PRESSED) speed = 20.0f * app->deltaTime;
 
-    if (app->input.keys[K_W] == BUTTON_PRESSED) newPos.z -= speed;
-    if (app->input.keys[K_S] == BUTTON_PRESSED) newPos.z += speed;
+    if (app->input.mouseButtons[LEFT])
+    {
+        // Rotation based on mouse axis
+        glm::mat4x4 rotation_matrixX = glm::rotate(-app->input.mouseDelta.x / 2 * app->deltaTime, glm::normalize(up_vector));
+        glm::mat4x4 rotation_matrixY = glm::rotate(-app->input.mouseDelta.y / 2 * app->deltaTime, glm::normalize(right_vector));
+        glm::mat4x4 transform = glm::translate(rotation_center) * rotation_matrixX * rotation_matrixY * glm::translate(-rotation_center);
 
-    if (app->input.keys[K_D] == BUTTON_PRESSED) newPos.x += speed;
-    if (app->input.keys[K_A] == BUTTON_PRESSED) newPos.x -= speed;
+        // Apply the transformations
+        app->cameraPosition = glm::vec3(transform * glm::vec4(app->cameraPosition, 1));
+        app->cameraReference = glm::vec3(transform * glm::vec4(app->cameraReference, 1));
+    }
 
-    if (app->input.keys[K_T] == BUTTON_PRESSED) newPos.y += speed;
-    if (app->input.keys[K_G] == BUTTON_PRESSED) newPos.y -= speed;
+    if (app->input.mouseButtons[RIGHT])
+    {
+        vec3 direction_vector = glm::normalize(app->cameraReference - app->cameraPosition);
 
-    app->cameraPosition += newPos;
-    app->cameraReference += newPos;
+        if (app->input.keys[K_W] == BUTTON_PRESSED) newPos += speed * direction_vector;
+        if (app->input.keys[K_S] == BUTTON_PRESSED) newPos -= speed * direction_vector;
 
-    app->cameraMatrix = glm::lookAt
-    (
-        app->cameraPosition, 
-        app->cameraReference,
-        glm::vec3(0, 1, 0)        
-    );
+        if (app->input.keys[K_D] == BUTTON_PRESSED) newPos += speed * vec3(-direction_vector.z, 0, direction_vector.x);
+        if (app->input.keys[K_A] == BUTTON_PRESSED) newPos -= speed * vec3(-direction_vector.z, 0, direction_vector.x);
+
+        if (app->input.keys[K_T] == BUTTON_PRESSED) newPos.y += speed;
+        if (app->input.keys[K_G] == BUTTON_PRESSED) newPos.y -= speed;
+    
+        app->cameraReference += newPos;
+        app->cameraPosition += newPos;
+    }
+
+    // Generate view matrix
+    app->cameraMatrix = glm::lookAt(app->cameraPosition, app->cameraReference, up_vector);
 }
 
 void Update(App* app)
