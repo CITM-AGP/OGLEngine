@@ -101,7 +101,8 @@ enum class Mode
     Mode_Albedo,
     Mode_Position,
     Mode_Bloom_Brightest,
-    Mode_Bloom_Blur
+    Mode_Bloom_Blur,
+    Mode_NormalMapping
 };
 
 struct App
@@ -144,14 +145,14 @@ struct App
     u32 blitBrightestPixelsProgram;
     u32 blur;
     u32 bloomProgram;
+    u32 normalMappingProgramIdx;
+
     int kernelRadius = 24;
     int lodIntensity0 = 1;
     int lodIntensity1 = 1;
     int lodIntensity2 = 1;
     int lodIntensity3 = 1;
     int lodIntensity4 = 1;
-
-
 
     // bloom
     bool renderBloom = true;
@@ -175,6 +176,7 @@ struct App
     GLuint albedoTextureAttachment;
     GLuint depthTextureAttachment;
     GLuint positionTextureAttachment;
+    GLuint normalTextureAttachment;
 
     GLuint depthAttachmentHandle;
     GLuint framebufferHandle;
@@ -185,10 +187,12 @@ struct App
     u32 blackTexIdx;
     u32 normalTexIdx;
     u32 magentaTexIdx;
+    u32 barrelNormalMap;
 
     u32 model;
     u32 sphere;
     u32 plane;
+    u32 barrel;
     //u32 texturedMeshProgram_uTexture;
 
     // Mode

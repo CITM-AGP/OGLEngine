@@ -373,6 +373,7 @@ void Init(App* app)
     app->blitBrightestPixelsProgram = LoadProgram(app, "shaders.glsl", "BLOOM_BRIGHTEST");
     app->blur = LoadProgram(app, "shaders.glsl", "BLOOM_BLUR");
     app->bloomProgram = LoadProgram(app, "shaders.glsl", "BLOOM");
+    app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "SHOW_TEXTURED_MESH");  
 
     // --- Textures ---
     app->diceTexIdx = LoadTexture2D(app, "dice.png");
@@ -380,11 +381,12 @@ void Init(App* app)
     app->blackTexIdx = LoadTexture2D(app, "color_black.png");
     app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
     app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
+    app->barrelNormalMap = LoadTexture2D(app, "models/Barrel_NormalMap.png");
 
-    app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "SHOW_TEXTURED_MESH");  
     app->model = LoadModel(app, "Patrick/Patrick.obj");
     app->sphere = LoadModel(app, "models/Sphere.fbx");
     app->plane = LoadModel(app, "models/Plane.fbx");
+    app->barrel = LoadModel(app, "models/Barrel_Prop.FBX");
 
     // --- Create entities ---
     Entity ent = Entity(glm::mat4(1.0), app->model, 0, 0);
@@ -401,8 +403,11 @@ void Init(App* app)
 
     Entity ent4 = Entity(glm::mat4(1.0), app->plane, 0, 0);
     ent4.worldMatrix = glm::translate(ent4.worldMatrix, vec3(0.0, -2.5, 0.0));
-    //ent4.worldMatrix = glm::scale(ent4.worldMatrix, vec3(50.0, 50.0, 50.0));
     app->entities.push_back(ent4);
+
+    Entity ent5 = Entity(glm::mat4(1.0), app->barrel, 0, 0);
+    ent5.worldMatrix = glm::translate(ent5.worldMatrix, vec3(0.0, 5.0, 0.0));
+    app->entities.push_back(ent5);
 
     vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);
     vec3 lightPos2 = vec3(6.0, 1.0, 0.0);
