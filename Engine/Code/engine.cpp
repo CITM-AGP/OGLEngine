@@ -384,9 +384,10 @@ void Init(App* app)
     app->barrelNormalMap = LoadTexture2D(app, "models/Barrel_NormalMap.png");
 
     app->model = LoadModel(app, "Patrick/Patrick.obj");
+    app->barrel = LoadModel(app, "models/Barrel_Prop.FBX");
     app->sphere = LoadModel(app, "models/Sphere.fbx");
     app->plane = LoadModel(app, "models/Plane.fbx");
-    app->barrel = LoadModel(app, "models/Barrel_Prop.FBX");
+
 
     // --- Create entities ---
     Entity ent = Entity(glm::mat4(1.0), app->model, 0, 0);
@@ -1082,8 +1083,8 @@ void Render(App* app)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
 
-            //if(ent.modelIndex > 0)
-            //    glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 0);
+            //if(ent.modelIndex > 1)
+            //    glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 1);
             //else
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 0);
 
@@ -1095,7 +1096,7 @@ void Render(App* app)
     }
 
     // deferred lighting pass
-    if (app->mode == Mode::Mode_Model)
+    if (app->mode != Mode::Mode_ForwardRender)
     {
         Program& deferredLighting = app->programs[app->deferredLightingProgramIdx];
         glUseProgram(deferredLighting.handle);
