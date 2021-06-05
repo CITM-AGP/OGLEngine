@@ -381,10 +381,11 @@ void Init(App* app)
     app->blackTexIdx = LoadTexture2D(app, "color_black.png");
     app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
     app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
+    app->barrelAlbedoMap = LoadTexture2D(app, "Bandit/Bandit1_AlbedoMap.png");
     app->barrelNormalMap = LoadTexture2D(app, "models/Barrel_NormalMap.png");
 
     app->model = LoadModel(app, "Patrick/Patrick.obj");
-    app->barrel = LoadModel(app, "cube/Cube.fbx");
+    app->barrel = LoadModel(app, "models/Barrel_Prop.fbx");
     app->sphere = LoadModel(app, "models/Sphere.fbx");
     app->plane = LoadModel(app, "models/Plane.fbx");
 
@@ -407,7 +408,7 @@ void Init(App* app)
     app->entities.push_back(ent4);
 
     Entity ent5 = Entity(glm::mat4(1.0), app->barrel, 0, 0);
-    ent5.worldMatrix = glm::translate(ent5.worldMatrix, vec3(0.0, -100.0, 0.0));
+    ent5.worldMatrix = glm::translate(ent5.worldMatrix, vec3(0.0, 5.0, 0.0));
     app->entities.push_back(ent5);
 
     vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);
@@ -603,14 +604,16 @@ void Gui(App* app)
         static vec3 entity2 = vec3(2.5f, 1.0f, 2.0f);
         static vec3 entity3 = vec3(2.0f, 2.0f, -2.0f);
 
+        ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "NORMAL MAP");
+        ImGui::NewLine();
+
+        ImGui::Checkbox("Normal Map", &app->normalMap);
+        ImGui::NewLine();
 
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "BLOOM");
         ImGui::NewLine();
 
         ImGui::Checkbox("Render Bloom", &app->renderBloom);
-        ImGui::NewLine();
-
-        ImGui::Checkbox("Normal Map", &app->normalMap);
         ImGui::NewLine();
 
         ImGui::InputInt("Kernel Radius", &app->kernelRadius);
@@ -1096,7 +1099,7 @@ void Render(App* app)
             if (app->normalMap)
             {
                 glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.normalsTextureIdx].handle);
+                glBindTexture(GL_TEXTURE_2D, app->textures[app->barrelNormalMap].handle);
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "uNormalMap"), 1);
 
                 if (ent.modelIndex == 1)

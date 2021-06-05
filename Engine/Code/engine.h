@@ -189,6 +189,7 @@ struct App
     u32 normalTexIdx;
     u32 magentaTexIdx;
     u32 barrelNormalMap;
+    u32 barrelAlbedoMap;
 
     u32 model;
     u32 sphere;
