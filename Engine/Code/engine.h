@@ -156,6 +156,7 @@ struct App
 
     // bloom
     bool renderBloom = true;
+    bool normalMap = true;
     GLuint rtBright; // for blitting brightest pixels and vertical blur
     GLuint rtBloomH; // For first pass horizontal blur
     GLuint fboBloom1;

@@ -384,7 +384,7 @@ void Init(App* app)
     app->barrelNormalMap = LoadTexture2D(app, "models/Barrel_NormalMap.png");
 
     app->model = LoadModel(app, "Patrick/Patrick.obj");
-    app->barrel = LoadModel(app, "models/Barrel_Prop.FBX");
+    app->barrel = LoadModel(app, "cube/Cube.fbx");
     app->sphere = LoadModel(app, "models/Sphere.fbx");
     app->plane = LoadModel(app, "models/Plane.fbx");
 
@@ -407,7 +407,7 @@ void Init(App* app)
     app->entities.push_back(ent4);
 
     Entity ent5 = Entity(glm::mat4(1.0), app->barrel, 0, 0);
-    ent5.worldMatrix = glm::translate(ent5.worldMatrix, vec3(0.0, 5.0, 0.0));
+    ent5.worldMatrix = glm::translate(ent5.worldMatrix, vec3(0.0, -100.0, 0.0));
     app->entities.push_back(ent5);
 
     vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);
@@ -458,7 +458,7 @@ void Init(App* app)
         glm::radians(60.0f),        // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
         4.0f / 3.0f,                // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
         0.1f,                       // Near clipping plane. Keep as big as possible, or you'll get precision issues.
-        100.0f                      // Far clipping plane. Keep as little as possible.
+        1000.0f                      // Far clipping plane. Keep as little as possible.
     );
 
     // --- BLOOM ---
@@ -607,7 +607,10 @@ void Gui(App* app)
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "BLOOM");
         ImGui::NewLine();
 
-        ImGui::Checkbox("renderBloom", &app->renderBloom);
+        ImGui::Checkbox("Render Bloom", &app->renderBloom);
+        ImGui::NewLine();
+
+        ImGui::Checkbox("Normal Map", &app->normalMap);
         ImGui::NewLine();
 
         ImGui::InputInt("Kernel Radius", &app->kernelRadius);
@@ -1083,12 +1086,24 @@ void Render(App* app)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
 
-            //if(ent.modelIndex > 1)
-            //    glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 1);
+            //if (ent.modelIndex > 1)
+           //     glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 1);
             //else
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "noTexture"), 0);
-
+            
             glUniform1i(glGetUniformLocation(renderProgram.handle, "uTexture"), 0);
+
+            if (app->normalMap)
+            {
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.normalsTextureIdx].handle);
+                glUniform1i(glGetUniformLocation(renderProgram.handle, "uNormalMap"), 1);
+
+                if (ent.modelIndex == 1)
+                    glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 0);
+                else
+                    glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 1);
+            }
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
