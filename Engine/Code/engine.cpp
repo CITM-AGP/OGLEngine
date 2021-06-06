@@ -621,6 +621,7 @@ void Gui(App* app)
         ImGui::NewLine();
 
         ImGui::Checkbox("Normal Map", &app->normalMap);
+        ImGui::Checkbox("Relief Map", &app->reliefMap);
         ImGui::NewLine();
         ImGui::Text("Cube bumpiness");
         ImGui::DragFloat("##b", (float*)&app->bumpiness, 0.1f);
@@ -1129,15 +1130,18 @@ void Render(App* app)
             }
 
             // Relief map
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, app->textures[app->test].handle);
-            glUniform1i(glGetUniformLocation(renderProgram.handle, "uBumpTexture"), 2);
-            glUniform1f(glGetUniformLocation(renderProgram.handle, "uBumpiness"), app->bumpiness);
+            if (app->reliefMap)
+            {
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, app->textures[app->test].handle);
+                glUniform1i(glGetUniformLocation(renderProgram.handle, "uBumpTexture"), 2);
+                glUniform1f(glGetUniformLocation(renderProgram.handle, "uBumpiness"), app->bumpiness);
 
-            if (ent.modelIndex == 3)
-                glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 0);
-            else
-                glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 1);
+                if (ent.modelIndex == 3)
+                    glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 0);
+                else
+                    glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 1);
+            }
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
