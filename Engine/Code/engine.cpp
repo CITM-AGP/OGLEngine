@@ -1063,7 +1063,7 @@ void Render(App* app)
 
     // Deferred geometry pass
 
-    Program& renderProgram = app->programs[app->deferredGeometryProgramIdx];
+    Program renderProgram = app->programs[app->deferredGeometryProgramIdx];
 
     // forward shading
     if (app->mode == Mode::Mode_ForwardRender)
