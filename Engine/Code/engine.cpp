@@ -297,7 +297,7 @@ void Init(App* app)
     GenerateFramebufferTexture(app->normalsTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
     GenerateFramebufferTexture(app->albedoTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
     GenerateFramebufferTexture(app->depthTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
-    GenerateFramebufferTexture(app->positionTextureAttachment, app->displaySize, GL_UNSIGNED_BYTE);
+    GenerateFramebufferTexture(app->positionTextureAttachment, app->displaySize, GL_FLOAT);
 
     // Depth
     glGenTextures(1, &app->depthAttachmentHandle);

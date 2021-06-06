@@ -96,7 +96,7 @@ struct Light
 in vec2 vTexCoord;
 in vec3 vPosition;		// in worldspace
 in vec3 vNormal;		// in worldspace
-in vec3 uViewDir;		// in worldspace
+in vec3 vViewDir;		// in worldspace
 in vec3 vTangent;		// in worldspace
 in vec3 vBitangent;		// in worldspace
 
@@ -132,8 +132,7 @@ void main()
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
     float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
-	vec4 albedo = texture(uTexture, vTexCoord);
-	vec4 test = texture(uNormalMap, vTexCoord);
+	vec3 albedo = texture(uTexture, vTexCoord).rgb;
 
 	if(noTexture == 1)
 		oAlbedo = vec4(0.5);
@@ -142,7 +141,7 @@ void main()
     float ambientIntensity = 0.4;
     vec3 ambientColor = albedo.xyz * ambientIntensity;	
 
-	vec3 V = normalize(-uViewDir.xyz);	// direction from pixel to camera
+	vec3 V = normalize(-vViewDir.xyz);	// direction from pixel to camera
 	vec3 T = normalize(vTangent);		// tangent
 	vec3 B = normalize(vBitangent);		// bitangent
     vec3 N = normalize(vNormal);		// normal
@@ -158,24 +157,54 @@ void main()
 	vec3 diffuseColor;
 	vec3 specularColor;
 
+//	for(int i = 0; i < uLightCount; ++i)
+//	{
+//	    float attenuation = 1.0f;
+//		
+//		// --- If we have a point light, attenuate according to distance ---
+//		if(uLight[i].type == 1)
+//			attenuation = 1.0 / length(uLight[i].position - vPosition);
+//	        
+//	    vec3 L = normalize(uLight[i].direction - vViewDir.xyz); // Light direction 
+//	    vec3 R = reflect(-L, N); // reflected vector
+//	    
+//	    // Diffuse
+//	    float diffuseIntensity = max(0.0, dot(N, L));
+//	    diffuseColor += attenuation * albedo.xyz * uLight[i].color * diffuseIntensity;
+//	    
+//	    // Specular
+//	    float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
+//	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
+//	}
+
 	for(int i = 0; i < uLightCount; ++i)
 	{
 	    float attenuation = 1.0f;
-		
+		vec3 L;
 		// --- If we have a point light, attenuate according to distance ---
 		if(uLight[i].type == 1)
-			attenuation = 1.0 / length(uLight[i].position - vPosition);
-	        
-	    vec3 L = normalize(uLight[i].direction - uViewDir.xyz); // Light direction 
+		{
+			float dist = length(uLight[i].position - vPosition);
+			float linear = 0.05;
+			float quadratic = 0.01;
+			attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist);
+			L = normalize(uLight[i].position - vPosition); // Light direction 
+		}
+	    else    
+			L = normalize(uLight[i].direction); // Light direction 
+
 	    vec3 R = reflect(-L, N); // reflected vector
 	    
 	    // Diffuse
-	    float diffuseIntensity = max(0.0, dot(N, L));
-	    diffuseColor += attenuation * albedo.xyz * uLight[i].color * diffuseIntensity;
+	    float diffuseIntensity = max(dot(N, L), 0.0);
+	    diffuseColor += albedo.xyz * uLight[i].color * diffuseIntensity;
 	    
 	    // Specular
-	    float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
+		float specularIntensity = pow(max(dot(V, R), 0.0), shininess);
 	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
+
+		diffuseColor*=attenuation;
+		specularColor*=attenuation;
 	}
 
 	// Final outputs
@@ -263,7 +292,7 @@ struct Light
 in vec2 vTexCoord;
 in vec3 vPosition;		// in worldspace
 in vec3 vNormal;		// in worldspace
-in vec3 uViewDir;		// in worldspace
+in vec3 vViewDir;		// in worldspace
 in vec3 vTangent;		// in worldspace
 in vec3 vBitangent;		// in worldspace
 
@@ -359,7 +388,8 @@ out vec3 ViewPos; // in worldspace
 void main()
 {
 	vTexCoord = aTexCoord;
-	ViewPos = vec3(uWorldViewProjectionMatrix * vec4(uCameraPosition, 1.0));
+	ViewPos = vec3(uCameraPosition);
+
 	gl_Position =  vec4(aPosition, 1.0);
 }
 
@@ -374,7 +404,7 @@ struct Light
 };
 
 in vec2 vTexCoord;
-in vec3 ViewPos; // in worldspace
+in vec3 ViewPos;		// in worldspace
 
 layout(binding = 0, std140) uniform GlobalParams
 {
@@ -396,7 +426,7 @@ void main()
 	vec3 vposition = texture(oPosition, vTexCoord).rgb;
 	vec3 Normal = texture(oNormals, vTexCoord).rgb;
 	vec3 albedo = texture(oAlbedo, vTexCoord).rgb;
-	vec3 viewDir = normalize(ViewPos - vposition);
+	vec3 viewDir = normalize(-(ViewPos - vposition));
 
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
@@ -439,7 +469,6 @@ void main()
 
 		diffuseColor*=attenuation;
 		specularColor*=attenuation;
-
 	}
 	
 	// Final outputs
