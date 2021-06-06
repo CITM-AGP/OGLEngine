@@ -407,6 +407,7 @@ void Init(App* app)
 
     Entity ent4 = Entity(glm::mat4(1.0), app->plane, 0, 0);
     ent4.worldMatrix = glm::translate(ent4.worldMatrix, vec3(0.0, -2.5, 0.0));
+    ent4.worldMatrix = glm::scale(ent4.worldMatrix, vec3(1.0, 1.0, 1.0));
     app->entities.push_back(ent4);
 
     Entity ent5 = Entity(glm::mat4(1.0), app->barrel, 0, 0);
@@ -418,7 +419,8 @@ void Init(App* app)
     app->entities.push_back(ent6);
 
     Entity ent7 = Entity(glm::mat4(1.0), app->cube, 0, 0);
-    ent7.worldMatrix = glm::translate(ent7.worldMatrix, vec3(0.0, -100.0, -100));
+    ent7.worldMatrix = glm::translate(ent7.worldMatrix, vec3(-2.0, 5.0, -10.0));
+    ent7.worldMatrix = glm::scale(ent7.worldMatrix, vec3(0.025, 0.025, 0.025));
     app->entities.push_back(ent7);
 
     vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);

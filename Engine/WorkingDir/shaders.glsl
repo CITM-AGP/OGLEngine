@@ -184,8 +184,7 @@ void main()
 		N = TBN * tangentSpaceNormal;
 	}
 
-	vec3 diffuseColor;
-	vec3 specularColor;
+
 
 //	for(int i = 0; i < uLightCount; ++i)
 //	{
@@ -207,10 +206,15 @@ void main()
 //	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
 //	}
 
+	vec3 finalDiffuse;
+	vec3 finalSpecular;
+
 	for(int i = 0; i < uLightCount; ++i)
 	{
 	    float attenuation = 1.0f;
 		vec3 L;
+		vec3 diffuseColor;
+		vec3 specularColor;
 		// --- If we have a point light, attenuate according to distance ---
 		if(uLight[i].type == 1)
 		{
@@ -235,10 +239,16 @@ void main()
 
 		diffuseColor*=attenuation;
 		specularColor*=attenuation;
+
+		finalDiffuse += diffuseColor;
+		finalSpecular += specularColor;
 	}
 
+	finalDiffuse /= uLightCount;
+	finalSpecular /= uLightCount;
+
 	// Final outputs
-	oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
+    oColor = vec4(ambientColor + finalDiffuse + finalSpecular, 1.0);
 
     oNormals = vec4(normalize(vNormal), 1.0); 
 	oAlbedo = texture(uTexture, vTexCoord);
@@ -468,13 +478,15 @@ void main()
 
     vec3 N = normalize(Normal); // normal
 
-	vec3 diffuseColor;
-	vec3 specularColor;
+	vec3 finalDiffuse;
+	vec3 finalSpecular;
 
 	for(int i = 0; i < uLightCount; ++i)
 	{
 	    float attenuation = 1.0f;
 		vec3 L;
+		vec3 diffuseColor;
+		vec3 specularColor;
 		// --- If we have a point light, attenuate according to distance ---
 		if(uLight[i].type == 1)
 		{
@@ -499,10 +511,16 @@ void main()
 
 		diffuseColor*=attenuation;
 		specularColor*=attenuation;
-	}
 	
+		finalDiffuse += diffuseColor;
+		finalSpecular += specularColor;
+	}
+
+	finalDiffuse /= uLightCount;
+	finalSpecular /= uLightCount;
+
 	// Final outputs
-    oColor = vec4(ambientColor + diffuseColor + specularColor, 1.0);
+    oColor = vec4(ambientColor + finalDiffuse + finalSpecular, 1.0);
 }
 
 #endif
