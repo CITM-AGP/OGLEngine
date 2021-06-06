@@ -135,7 +135,7 @@ vec2 ReliefMapping(vec2 texCoords, mat3 TBN)
 	float bumpiness = 0.1;
 
 	// Compute the view ray in texture space
-	vec3 rayTexSpace = transpose(TBN) * uViewDir;
+	vec3 rayTexSpace = transpose(TBN) * vViewDir;
 
 	// Increment
 	float texSize = 2048;
