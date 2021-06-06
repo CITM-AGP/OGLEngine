@@ -617,12 +617,13 @@ void Gui(App* app)
         static vec3 entity2 = vec3(2.5f, 1.0f, 2.0f);
         static vec3 entity3 = vec3(2.0f, 2.0f, -2.0f);
 
-        ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "NORMAL MAP");
+        ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "RELIEF MAP");
         ImGui::NewLine();
 
         ImGui::Checkbox("Normal Map", &app->normalMap);
         ImGui::NewLine();
-        ImGui::DragFloat("Bumpiness", (float*)&app->bumpiness, 0.1f);
+        ImGui::Text("Cube bumpiness");
+        ImGui::DragFloat("##b", (float*)&app->bumpiness, 0.1f);
 
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "BLOOM");
         ImGui::NewLine();

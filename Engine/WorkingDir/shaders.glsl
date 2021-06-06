@@ -132,13 +132,13 @@ float LinearizeDepth(float depth)
 
 vec2 ReliefMapping(vec2 texCoords, mat3 TBN)
 {
-	int numSteps = 15;
+	int numSteps = 30;
 
 	// Compute the view ray in texture space
-	vec3 rayTexSpace = transpose(TBN) * normalize(-vViewDir.xyz);
+	vec3 rayTexSpace = transpose(TBN) * normalize(vViewDir.xyz);
 
 	// Increment
-	float texSize = 2048;
+	float texSize = 256;
 	vec3 rayIncrementTexSpace;
 	rayIncrementTexSpace.xy = uBumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
 	rayIncrementTexSpace.z = 1.0 / numSteps;
@@ -171,6 +171,8 @@ void main()
 	// Convert normal from tangent space to world space
 	mat3 TBN = mat3(T, B, N);
 	vec2 texCoords = vTexCoord;
+
+	// Relief map
 	if (noBump == 0.0)
 		texCoords = ReliefMapping(vTexCoord, TBN);
 
@@ -179,6 +181,7 @@ void main()
 	if (noTexture == 1)
 		oAlbedo = vec4(0.5);
 
+	// Normal map
 	if (noNormal == 0.0)
 	{
 		vec3 tangentSpaceNormal = texture(uNormalMap, texCoords).xyz * 2.0 - vec3(1.0);
@@ -252,8 +255,6 @@ void main()
 
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
-
-
 layout(location=0) in vec3 aPosition;
 layout(location=1) in vec3 aNormal;
 layout(location=2) in vec2 aTexCoord;
@@ -320,8 +321,11 @@ in vec3 vBitangent;		// in worldspace
 
 uniform sampler2D uTexture;
 uniform sampler2D uNormalMap;
+uniform sampler2D uBumpTexture;
+uniform float uBumpiness;
 uniform int noTexture;
 uniform int noNormal;
+uniform int noBump;
 
 layout(binding = 0, std140) uniform GlobalParams
 {
@@ -345,22 +349,56 @@ float LinearizeDepth(float depth)
     return (2.0 * near * far) / (far + near - z * (far - near));	
 }
 
+vec2 ReliefMapping(vec2 texCoords, mat3 TBN)
+{
+	int numSteps = 30;
+
+	// Compute the view ray in texture space
+	vec3 rayTexSpace = transpose(TBN) * normalize(vViewDir.xyz);
+
+	// Increment
+	float texSize = 256;
+	vec3 rayIncrementTexSpace;
+	rayIncrementTexSpace.xy = uBumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
+	rayIncrementTexSpace.z = 1.0 / numSteps;
+
+	// Sampling state
+	vec3 samplePositionTexspace = vec3(texCoords, 0.0);
+	float sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+
+	// Linear search
+	for (int i = 0; i < numSteps && samplePositionTexspace.z < sampledDepth; ++i)
+	{
+		samplePositionTexspace += rayIncrementTexSpace;
+		sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+	}
+
+	return samplePositionTexspace.xy;
+}
+
 void main()
 {
 	vec3 T = normalize(vTangent);		// tangent
 	vec3 B = normalize(vBitangent);		// bitangent
     vec3 N = normalize(vNormal);		// normal
 
+	// Convert normal from tangent space to world space
+	mat3 TBN = mat3(T, B, N);
+	vec2 texCoords = vTexCoord;
+
+	// Relief map
+	if (noBump == 0.0)
+		texCoords = ReliefMapping(vTexCoord, TBN);
+
+	// Normal map
 	if (noNormal == 0.0)
 	{
-		// Convert normal from tangent space to world space
-		mat3 TBN = mat3(T, B, N);	
-		vec3 tangentSpaceNormal = texture(uNormalMap, vTexCoord).xyz * 2.0 - vec3(1.0);
+		vec3 tangentSpaceNormal = texture(uNormalMap, texCoords).xyz * 2.0 - vec3(1.0);
 		N = TBN * tangentSpaceNormal;
 	}
 
 	oNormals = vec4(N, 1.0);
-	oAlbedo = texture(uTexture, vTexCoord);
+	oAlbedo = texture(uTexture, texCoords);
 
 	if(noTexture == 1.0)
 		oAlbedo = vec4(0.5);
