@@ -196,6 +196,7 @@ struct App
     u32 plane;
     u32 barrel;
     u32 bandit;
+    u32 cube;
 
     // Mode
     Mode mode;
