@@ -161,7 +161,7 @@ void main()
 {
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
-    float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
+    float shininess = 120.0; // how strong specular reflections are (more shininess harder and smaller spec)
 	vec3 albedo = texture(uTexture, vTexCoord).rgb;
 
 	if(noTexture == 1)
@@ -171,7 +171,7 @@ void main()
     float ambientIntensity = 0.4;
     vec3 ambientColor = albedo.xyz * ambientIntensity;	
 
-	vec3 V = normalize(-vViewDir.xyz);	// direction from pixel to camera
+	vec3 V = normalize(vViewDir.xyz);	// direction from pixel to camera
 	vec3 T = normalize(vTangent);		// tangent
 	vec3 B = normalize(vBitangent);		// bitangent
     vec3 N = normalize(vNormal);		// normal
@@ -226,7 +226,7 @@ void main()
 	finalSpecular /= uLightCount;
 
 	// Final outputs
-    oColor = vec4(ambientColor + finalDiffuse , 1.0);
+    oColor = vec4(ambientColor + finalDiffuse + finalSpecular, 1.0);
 
     oNormals = vec4(normalize(vNormal), 1.0); 
 	oAlbedo = texture(uTexture, vTexCoord);
@@ -444,16 +444,17 @@ void main()
 	vec3 vposition = texture(oPosition, vTexCoord).rgb;
 	vec3 Normal = texture(oNormals, vTexCoord).rgb;
 	vec3 albedo = texture(oAlbedo, vTexCoord).rgb;
-	vec3 viewDir = normalize(-(ViewPos - vposition));
+	vec3 viewDir = normalize((ViewPos - vposition));
 
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
-    float shininess = 40.0; // how strong specular reflections are (more shininess harder and smaller spec)
+    float shininess = 120.0; // how strong specular reflections are (more shininess harder and smaller spec)
 
 	// Ambient
     float ambientIntensity = 0.4;
     vec3 ambientColor = albedo.xyz * ambientIntensity;
 
+	// Note: This was being normalized again and gave a bug
     vec3 N = Normal; // normal
 
 	vec3 finalDiffuse;
@@ -498,7 +499,7 @@ void main()
 	finalSpecular /= uLightCount;
 
 	// Final outputs
-    oColor = vec4(ambientColor + finalDiffuse, 1.0);
+    oColor = vec4(ambientColor + finalDiffuse + finalSpecular, 1.0);
 }
 
 #endif
