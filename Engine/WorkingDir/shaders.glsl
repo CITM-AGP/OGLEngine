@@ -184,28 +184,6 @@ void main()
 		N = TBN * tangentSpaceNormal;
 	}
 
-
-
-//	for(int i = 0; i < uLightCount; ++i)
-//	{
-//	    float attenuation = 1.0f;
-//		
-//		// --- If we have a point light, attenuate according to distance ---
-//		if(uLight[i].type == 1)
-//			attenuation = 1.0 / length(uLight[i].position - vPosition);
-//	        
-//	    vec3 L = normalize(uLight[i].direction - vViewDir.xyz); // Light direction 
-//	    vec3 R = reflect(-L, N); // reflected vector
-//	    
-//	    // Diffuse
-//	    float diffuseIntensity = max(0.0, dot(N, L));
-//	    diffuseColor += attenuation * albedo.xyz * uLight[i].color * diffuseIntensity;
-//	    
-//	    // Specular
-//	    float specularIntensity = pow(max(dot(R, V), 0.0), shininess);
-//	    specularColor += attenuation * specular * uLight[i].color * specularIntensity;
-//	}
-
 	vec3 finalDiffuse;
 	vec3 finalSpecular;
 
@@ -248,7 +226,7 @@ void main()
 	finalSpecular /= uLightCount;
 
 	// Final outputs
-    oColor = vec4(ambientColor + finalDiffuse + finalSpecular, 1.0);
+    oColor = vec4(ambientColor + finalDiffuse , 1.0);
 
     oNormals = vec4(normalize(vNormal), 1.0); 
 	oAlbedo = texture(uTexture, vTexCoord);
@@ -476,7 +454,7 @@ void main()
     float ambientIntensity = 0.4;
     vec3 ambientColor = albedo.xyz * ambientIntensity;
 
-    vec3 N = normalize(Normal); // normal
+    vec3 N = Normal; // normal
 
 	vec3 finalDiffuse;
 	vec3 finalSpecular;
@@ -520,7 +498,7 @@ void main()
 	finalSpecular /= uLightCount;
 
 	// Final outputs
-    oColor = vec4(ambientColor + finalDiffuse + finalSpecular, 1.0);
+    oColor = vec4(ambientColor + finalDiffuse, 1.0);
 }
 
 #endif
