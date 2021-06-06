@@ -140,18 +140,18 @@ vec2 ReliefMapping(vec2 texCoords, mat3 TBN)
 	// Increment
 	float texSize = 256;
 	vec3 rayIncrementTexSpace;
-	rayIncrementTexSpace.xy = uBumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
+	rayIncrementTexSpace.xy = -1 * uBumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
 	rayIncrementTexSpace.z = 1.0 / numSteps;
 
 	// Sampling state
 	vec3 samplePositionTexspace = vec3(texCoords, 0.0);
-	float sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+	float sampledDepth = texture(uBumpTexture, samplePositionTexspace.xy).r;
 
 	// Linear search
 	for (int i = 0; i < numSteps && samplePositionTexspace.z < sampledDepth; ++i)
 	{
 		samplePositionTexspace += rayIncrementTexSpace;
-		sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+		sampledDepth = texture(uBumpTexture, samplePositionTexspace.xy).r;
 	}
 
 	return samplePositionTexspace.xy;
@@ -359,18 +359,18 @@ vec2 ReliefMapping(vec2 texCoords, mat3 TBN)
 	// Increment
 	float texSize = 256;
 	vec3 rayIncrementTexSpace;
-	rayIncrementTexSpace.xy = uBumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
+	rayIncrementTexSpace.xy = -1 * uBumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
 	rayIncrementTexSpace.z = 1.0 / numSteps;
 
 	// Sampling state
 	vec3 samplePositionTexspace = vec3(texCoords, 0.0);
-	float sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+	float sampledDepth = texture(uBumpTexture, samplePositionTexspace.xy).r;
 
 	// Linear search
 	for (int i = 0; i < numSteps && samplePositionTexspace.z < sampledDepth; ++i)
 	{
 		samplePositionTexspace += rayIncrementTexSpace;
-		sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+		sampledDepth = texture(uBumpTexture, samplePositionTexspace.xy).r;
 	}
 
 	return samplePositionTexspace.xy;
