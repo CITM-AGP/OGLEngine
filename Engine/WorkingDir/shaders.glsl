@@ -102,8 +102,10 @@ in vec3 vBitangent;		// in worldspace
 
 uniform sampler2D uTexture;
 uniform sampler2D uNormalMap;
+uniform sampler2D uBumpTexture;
 uniform int noTexture;
 uniform int noNormal;
+uniform int noBump;
 
 layout(binding = 0, std140) uniform GlobalParams
 {
@@ -125,6 +127,34 @@ float LinearizeDepth(float depth)
 {
     float z = depth * 2.0 - 1.0; // back to NDC 
     return (2.0 * near * far) / (far + near - z * (far - near));	
+}
+
+vec2 ReliefMapping(vec2 texCoords, mat3 TBN)
+{
+	int numSteps = 15;
+	float bumpiness = 0.1;
+
+	// Compute the view ray in texture space
+	vec3 rayTexSpace = transpose(TBN) * uViewDir;
+
+	// Increment
+	float texSize = 2048;
+	vec3 rayIncrementTexSpace;
+	rayIncrementTexSpace.xy = bumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
+	rayIncrementTexSpace.z = 1.0 / numSteps;
+
+	// Sampling state
+	vec3 samplePositionTexspace = vec3(texCoords, 0.0);
+	float sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+
+	// Linear search
+	for (int i = 0; i < numSteps && samplePositionTexspace.z < sampledDepth; ++i)
+	{
+		samplePositionTexspace += rayIncrementTexSpace;
+		sampledDepth = 1.0 - texture(uBumpTexture, samplePositionTexspace.xy).r;
+	}
+
+	return samplePositionTexspace.xy;
 }
 
 void main()

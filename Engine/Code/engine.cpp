@@ -387,6 +387,7 @@ void Init(App* app)
     app->model = LoadModel(app, "Patrick/Patrick.obj");
     app->barrel = LoadModel(app, "models/Barrel_Prop.fbx");
     app->bandit = LoadModel(app, "models/Bandit_Minion_Animations.FBX");
+    app->cube = LoadModel(app, "cube/Cube.FBX");
     app->sphere = LoadModel(app, "models/Sphere.fbx");
     app->plane = LoadModel(app, "models/Plane.fbx");
 
@@ -415,6 +416,10 @@ void Init(App* app)
     Entity ent6 = Entity(glm::mat4(1.0), app->bandit, 0, 0);
     ent6.worldMatrix = glm::translate(ent6.worldMatrix, vec3(-2.5, 4.0, 3.0));
     app->entities.push_back(ent6);
+
+    Entity ent7 = Entity(glm::mat4(1.0), app->cube, 0, 0);
+    ent7.worldMatrix = glm::translate(ent7.worldMatrix, vec3(0.0, -100.0, -100));
+    app->entities.push_back(ent7);
 
     vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);
     vec3 lightPos2 = vec3(6.0, 1.0, 0.0);
@@ -1099,20 +1104,37 @@ void Render(App* app)
             
             glUniform1i(glGetUniformLocation(renderProgram.handle, "uTexture"), 0);
 
+            // Normal map
             if (app->normalMap)
             {
                 glActiveTexture(GL_TEXTURE1);
                 if (ent.modelIndex == 2)
                     glBindTexture(GL_TEXTURE_2D, app->textures[app->banditNormalMap].handle);
-                else
+                else if (ent.modelIndex == 1)
                     glBindTexture(GL_TEXTURE_2D, app->textures[app->barrelNormalMap].handle);
+                else
+                    glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.normalsTextureIdx].handle);
+
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "uNormalMap"), 1);
 
-                if (ent.modelIndex == 1 || ent.modelIndex == 2)
+                if (ent.modelIndex >= 1 && ent.modelIndex <= 3)
                     glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 0);
                 else
                     glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 1);
             }
+
+            // Relief map
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.bumpTextureIdx].handle);
+            glUniform1i(glGetUniformLocation(renderProgram.handle, "uBumpTexture"), 2);
+
+            if (ent.modelIndex == 3)
+                glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 0);
+            else
+                glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 1);
+
+            //glUniform1f(glGetUniformLocation(renderProgram.handle, "Relief"), (float)Relief);
+            //glUniform1f(glGetUniformLocation(renderProgram.handle, "Bumpiness"), app->bumpiness);
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
