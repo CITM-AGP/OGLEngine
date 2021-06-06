@@ -1068,7 +1068,7 @@ void Render(App* app)
 
     // Deferred geometry pass
 
-    Program& renderProgram = app->programs[app->deferredGeometryProgramIdx];
+    Program renderProgram = app->programs[app->deferredGeometryProgramIdx];
 
     // forward shading
     if (app->mode == Mode::Mode_ForwardRender)
@@ -1117,7 +1117,7 @@ void Render(App* app)
 
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "uNormalMap"), 1);
 
-                if (ent.modelIndex == 1 || ent.modelIndex == 2 || ent.modelIndex == 3)
+                if (ent.modelIndex >= 1 && ent.modelIndex <= 3)
                     glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 0);
                 else
                     glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 1);
@@ -1126,7 +1126,7 @@ void Render(App* app)
             // Relief map
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.bumpTextureIdx].handle);
-            glUniform1i(glGetUniformLocation(renderProgram.handle, "uBumpTex"), 2);
+            glUniform1i(glGetUniformLocation(renderProgram.handle, "uBumpTexture"), 2);
 
             if (ent.modelIndex == 3)
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 0);
