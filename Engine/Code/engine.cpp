@@ -381,11 +381,12 @@ void Init(App* app)
     app->blackTexIdx = LoadTexture2D(app, "color_black.png");
     app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
     app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
-    app->barrelAlbedoMap = LoadTexture2D(app, "Bandit/Bandit1_AlbedoMap.png");
+    app->banditNormalMap = LoadTexture2D(app, "models/Bandit_Minion_Normal.png");
     app->barrelNormalMap = LoadTexture2D(app, "models/Barrel_NormalMap.png");
 
     app->model = LoadModel(app, "Patrick/Patrick.obj");
     app->barrel = LoadModel(app, "models/Barrel_Prop.fbx");
+    app->bandit = LoadModel(app, "models/Bandit_Minion_Animations.FBX");
     app->sphere = LoadModel(app, "models/Sphere.fbx");
     app->plane = LoadModel(app, "models/Plane.fbx");
 
@@ -410,6 +411,10 @@ void Init(App* app)
     Entity ent5 = Entity(glm::mat4(1.0), app->barrel, 0, 0);
     ent5.worldMatrix = glm::translate(ent5.worldMatrix, vec3(0.0, 5.0, 0.0));
     app->entities.push_back(ent5);
+
+    Entity ent6 = Entity(glm::mat4(1.0), app->bandit, 0, 0);
+    ent6.worldMatrix = glm::translate(ent6.worldMatrix, vec3(-2.5, 4.0, 3.0));
+    app->entities.push_back(ent6);
 
     vec3 lightPos1 = vec3(-1.0, 1.0, -5.0);
     vec3 lightPos2 = vec3(6.0, 1.0, 0.0);
@@ -631,9 +636,7 @@ void Gui(App* app)
         ImGui::InputInt("LOD 4 Intensity", &app->lodIntensity4);        
         ImGui::NewLine();
 
-
         ImGui::NewLine();
-
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "Entity positions [X / Y / Z]");
         ImGui::NewLine();
 
@@ -1099,10 +1102,13 @@ void Render(App* app)
             if (app->normalMap)
             {
                 glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, app->textures[app->barrelNormalMap].handle);
+                if (ent.modelIndex == 2)
+                    glBindTexture(GL_TEXTURE_2D, app->textures[app->banditNormalMap].handle);
+                else
+                    glBindTexture(GL_TEXTURE_2D, app->textures[app->barrelNormalMap].handle);
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "uNormalMap"), 1);
 
-                if (ent.modelIndex == 1)
+                if (ent.modelIndex == 1 || ent.modelIndex == 2)
                     glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 0);
                 else
                     glUniform1i(glGetUniformLocation(renderProgram.handle, "noNormal"), 1);
@@ -1144,7 +1150,7 @@ void Render(App* app)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0); 
 
-    if (app->renderBloom && app->mode != Mode::Mode_ForwardRender)
+    if (app->renderBloom /* && app->mode != Mode::Mode_ForwardRender*/)
     {
         RenderBloom(app);
     }

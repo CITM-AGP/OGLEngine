@@ -164,7 +164,7 @@ struct App
     GLuint fboBloom3;
     GLuint fboBloom4;
     GLuint fboBloom5;
-    float bloomThreshold = 0.6;
+    float bloomThreshold = 0.7;
 
     // lights
     u32 globalParamsOffset;
@@ -189,13 +189,13 @@ struct App
     u32 normalTexIdx;
     u32 magentaTexIdx;
     u32 barrelNormalMap;
-    u32 barrelAlbedoMap;
+    u32 banditNormalMap;
 
     u32 model;
     u32 sphere;
     u32 plane;
     u32 barrel;
-    //u32 texturedMeshProgram_uTexture;
+    u32 bandit;
 
     // Mode
     Mode mode;
