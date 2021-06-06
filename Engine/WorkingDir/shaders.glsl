@@ -103,6 +103,7 @@ in vec3 vBitangent;		// in worldspace
 uniform sampler2D uTexture;
 uniform sampler2D uNormalMap;
 uniform sampler2D uBumpTexture;
+uniform float uBumpiness;
 uniform int noTexture;
 uniform int noNormal;
 uniform int noBump;
@@ -132,15 +133,14 @@ float LinearizeDepth(float depth)
 vec2 ReliefMapping(vec2 texCoords, mat3 TBN)
 {
 	int numSteps = 15;
-	float bumpiness = 0.1;
 
 	// Compute the view ray in texture space
-	vec3 rayTexSpace = transpose(TBN) * vViewDir;
+	vec3 rayTexSpace = transpose(TBN) * normalize(-vViewDir.xyz);
 
 	// Increment
 	float texSize = 2048;
 	vec3 rayIncrementTexSpace;
-	rayIncrementTexSpace.xy = bumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
+	rayIncrementTexSpace.xy = uBumpiness * rayTexSpace.xy / abs(rayTexSpace.z * texSize);
 	rayIncrementTexSpace.z = 1.0 / numSteps;
 
 	// Sampling state
@@ -162,28 +162,32 @@ void main()
 	// Mat parameters
     vec3 specular = vec3(1.0); // color reflected by mat
     float shininess = 120.0; // how strong specular reflections are (more shininess harder and smaller spec)
-	vec3 albedo = texture(uTexture, vTexCoord).rgb;
-
-	if(noTexture == 1)
-		oAlbedo = vec4(0.5);
-
-	// Ambient
-    float ambientIntensity = 0.4;
-    vec3 ambientColor = albedo.xyz * ambientIntensity;	
-
+	
 	vec3 V = normalize(vViewDir.xyz);	// direction from pixel to camera
 	vec3 T = normalize(vTangent);		// tangent
 	vec3 B = normalize(vBitangent);		// bitangent
     vec3 N = normalize(vNormal);		// normal
+	
+	// Convert normal from tangent space to world space
+	mat3 TBN = mat3(T, B, N);
+	vec2 texCoords = vTexCoord;
+	if (noBump == 0.0)
+		texCoords = ReliefMapping(vTexCoord, TBN);
+
+	vec3 albedo = texture(uTexture, texCoords).rgb;	
+
+	if (noTexture == 1)
+		oAlbedo = vec4(0.5);
 
 	if (noNormal == 0.0)
 	{
-		// Convert normal from tangent space to world space
-		mat3 TBN = mat3(T, B, N);	
-		vec3 tangentSpaceNormal = texture(uNormalMap, vTexCoord).xyz * 2.0 - vec3(1.0);
+		vec3 tangentSpaceNormal = texture(uNormalMap, texCoords).xyz * 2.0 - vec3(1.0);
 		N = TBN * tangentSpaceNormal;
 	}
-
+	
+	// Ambient
+    float ambientIntensity = 0.4;
+    vec3 ambientColor = albedo.xyz * ambientIntensity;	
 	vec3 finalDiffuse;
 	vec3 finalSpecular;
 

@@ -383,6 +383,7 @@ void Init(App* app)
     app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
     app->banditNormalMap = LoadTexture2D(app, "models/Bandit_Minion_Normal.png");
     app->barrelNormalMap = LoadTexture2D(app, "models/Barrel_NormalMap.png");
+    app->test = LoadTexture2D(app, "cube/toy_box_disp.png");
 
     app->model = LoadModel(app, "Patrick/Patrick.obj");
     app->barrel = LoadModel(app, "models/Barrel_Prop.fbx");
@@ -621,6 +622,7 @@ void Gui(App* app)
 
         ImGui::Checkbox("Normal Map", &app->normalMap);
         ImGui::NewLine();
+        ImGui::DragFloat("Bumpiness", (float*)&app->bumpiness, 0.1f);
 
         ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "BLOOM");
         ImGui::NewLine();
@@ -1127,16 +1129,14 @@ void Render(App* app)
 
             // Relief map
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.bumpTextureIdx].handle);
+            glBindTexture(GL_TEXTURE_2D, app->textures[app->test].handle);
             glUniform1i(glGetUniformLocation(renderProgram.handle, "uBumpTexture"), 2);
+            glUniform1f(glGetUniformLocation(renderProgram.handle, "uBumpiness"), app->bumpiness);
 
             if (ent.modelIndex == 3)
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 0);
             else
                 glUniform1i(glGetUniformLocation(renderProgram.handle, "noBump"), 1);
-
-            //glUniform1f(glGetUniformLocation(renderProgram.handle, "Relief"), (float)Relief);
-            //glUniform1f(glGetUniformLocation(renderProgram.handle, "Bumpiness"), app->bumpiness);
 
             Submesh& submesh = mesh.submeshes[i];
             glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

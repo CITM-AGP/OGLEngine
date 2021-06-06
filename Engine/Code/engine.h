@@ -164,6 +164,7 @@ struct App
     GLuint fboBloom3;
     GLuint fboBloom4;
     GLuint fboBloom5;
+    float bumpiness = 1.0f;
     float bloomThreshold = 0.7;
 
     // lights
@@ -190,6 +191,7 @@ struct App
     u32 magentaTexIdx;
     u32 barrelNormalMap;
     u32 banditNormalMap;
+    u32 test;
 
     u32 model;
     u32 sphere;
