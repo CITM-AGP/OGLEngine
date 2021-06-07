@@ -6,6 +6,9 @@ by Aitor Simona & Daniel Lorenzo
 
 ### Bloom
 
+![BloomON](docs/BloomON.PNG)
+![BloomOFF](docs/BloomOFF.PNG)
+
 Through the debug window, you can configure the blur kernel radius, the bloom brightest threshold and
 the blur LODs intensities. Image below.
 
