@@ -12,6 +12,8 @@ by Aitor Simona & Daniel Lorenzo
 Through the debug window, you can configure the blur kernel radius, the bloom brightest threshold and
 the blur LODs intensities. Image below.
 
+![BloomOptions](docs/BloomOptions.PNG)
+
 Uses BLOOM / BLOOM_BLUR and BLOOM_BRIGHTEST shaders
 
 ### Relief mapping
