@@ -1033,7 +1033,7 @@ void RenderBloom(App* app)
     passBlur(app, app->fboBloom4, glm::uvec2(w / 16, h / 16), GL_COLOR_ATTACHMENT0, app->rtBloomH, LOD(3), vertical);
     passBlur(app, app->fboBloom5, glm::uvec2(w / 32, h / 32), GL_COLOR_ATTACHMENT0, app->rtBloomH, LOD(4), vertical);
 
-    passBloom(app, app->framebufferHandle, GL_COLOR_ATTACHMENT0, app->rtBloomH, 5);
+    passBloom(app, app->framebufferHandle, GL_COLOR_ATTACHMENT0, app->rtBright, 5);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
     glBindTexture(GL_TEXTURE_2D, 0);
